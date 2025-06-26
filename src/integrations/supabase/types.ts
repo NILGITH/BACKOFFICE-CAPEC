@@ -16,7 +16,7 @@ export interface Database {
           title: string;
           description: string | null;
           content_type: "text" | "image" | "video" | "pdf";
-          content_ string | null;
+          content_data: string | null; // Corrected this line
           file_urls: string[] | null;
           menu_section_id: string | null;
           submenu_section_id: string | null;
