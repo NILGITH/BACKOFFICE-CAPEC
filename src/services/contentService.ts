@@ -121,11 +121,11 @@ export const contentService = {
     try {
       const { data, error } = await supabase
         .from('content_submissions')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .update({ 
           status,
           updated_at: new Date().toISOString()
-        } as any) // Ensured the comment is directly above the line with 'as any'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any) 
         .eq('id', id)
         .select()
         .single();
