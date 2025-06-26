@@ -75,6 +75,7 @@ export default function NewContentPage() {
 
     try {
       await contentService.createContentSubmission(formData, user.id);
+      setMessage("Contenu soumis avec succès ! Un email de notification a été envoyé.");
       setShowSuccessModal(true);
     } catch (error) {
       setMessage("Erreur lors de la soumission du contenu.");
