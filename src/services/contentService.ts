@@ -97,12 +97,10 @@ export const contentService = {
       
       console.log('Uploading file to Supabase:', fileName, 'Size:', file.size);
       
+      // Essayer d'abord sans options spéciales
       const { data, error } = await supabase.storage
         .from('content-files')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+        .upload(fileName, file);
 
       if (error) {
         console.error('Erreur upload Supabase:', error);
