@@ -51,6 +51,8 @@ Ce fichier peut être téléchargé depuis les emails de notification.`;
           const [bucket, ...pathParts] = urlParts[1].split('/');
           const filePath = pathParts.join('/');
           
+          console.log('Tentative de téléchargement Supabase:', { bucket, filePath });
+          
           // Télécharger le fichier depuis Supabase Storage
           const { data, error } = await supabase.storage
             .from(bucket)
@@ -76,17 +78,26 @@ Ce fichier peut être téléchargé depuis les emails de notification.`;
       }
     }
 
-    // Pour les URLs HTTP externes
+    // Pour les URLs HTTP externes (y compris les URLs publiques Supabase)
     if (typeof fileUrl === 'string' && fileUrl.startsWith('http')) {
       try {
+        console.log('Tentative de téléchargement HTTP:', fileUrl);
+        
         const response = await fetch(fileUrl);
         
         if (!response.ok) {
+          console.error('Réponse HTTP non OK:', response.status, response.statusText);
           return res.status(404).json({ message: 'Fichier non accessible' });
         }
 
         const buffer = await response.arrayBuffer();
         const contentType = response.headers.get('content-type') || 'application/octet-stream';
+        
+        console.log('Téléchargement HTTP réussi:', { 
+          size: buffer.byteLength, 
+          contentType,
+          fileName 
+        });
         
         res.setHeader('Content-Type', contentType);
         res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
@@ -101,6 +112,7 @@ Ce fichier peut être téléchargé depuis les emails de notification.`;
 
     // Redirection simple pour les autres cas
     if (typeof fileUrl === 'string') {
+      console.log('Redirection vers:', fileUrl);
       return res.redirect(302, fileUrl);
     }
 

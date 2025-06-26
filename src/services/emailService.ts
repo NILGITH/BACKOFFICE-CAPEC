@@ -67,16 +67,21 @@ export const emailService = {
       const filesList = content.files.map((file) => {
         let detail = `- ${file.name} (${file.type})`;
         if (file.url) {
-          detail += `\n  Télécharger: ${baseUrl}/api/download-file?fileUrl=${encodeURIComponent(file.url)}&fileName=${encodeURIComponent(file.name)}`;
+          const downloadUrl = `${baseUrl}/api/download-file?fileUrl=${encodeURIComponent(file.url)}&fileName=${encodeURIComponent(file.name)}`;
+          detail += `
+  Télécharger: ${downloadUrl}`;
         }
         return detail;
       });
-      filesDetailsText = "Fichiers joints:\n" + filesList.join("\n");
+      filesDetailsText = "Fichiers joints:
+" + filesList.join("
+");
     }
 
     const htmlBody = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background-color: #ea580c; color: white; padding: 20px; text-align: center;">
+            <img src="${baseUrl}/logo-capec-mcddv8mz.png" alt="CAPEC Logo" style="height: 60px; margin-bottom: 10px;" />
             <h1>CAPEC - Nouvelle Soumission</h1>
           </div>
           <div style="padding: 20px; background-color: #f9f9f9;">
@@ -97,7 +102,7 @@ export const emailService = {
                     ${file.url ? `
                       <br/>
                       <a href="${baseUrl}/api/download-file?fileUrl=${encodeURIComponent(file.url)}&fileName=${encodeURIComponent(file.name)}" 
-                         style="color: #ea580c; text-decoration: none; font-weight: bold;">
+                         style="color: #ea580c; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 5px; padding: 5px 10px; background-color: #fff; border: 1px solid #ea580c; border-radius: 3px;">
                         🔗 Télécharger le fichier
                       </a>
                     ` : ""}
@@ -109,6 +114,7 @@ export const emailService = {
             <div style="margin-top: 20px; padding: 15px; background-color: #fff3cd; border-radius: 5px; border: 1px solid #ffeaa7;">
               <p style="margin: 0; color: #856404;"><strong>Action requise :</strong> Cette soumission nécessite votre approbation.</p>
               <p style="margin: 5px 0 0 0; color: #856404;">Connectez-vous au panel d'administration pour approuver ou rejeter cette soumission.</p>
+              <p style="margin: 5px 0 0 0; color: #856404;"><strong>URL d'administration :</strong> <a href="${baseUrl}/admin/login" style="color: #ea580c;">${baseUrl}/admin/login</a></p>
             </div>
           </div>
           <div style="background-color: #ea580c; color: white; padding: 10px; text-align: center; font-size: 12px;">
@@ -130,9 +136,10 @@ export const emailService = {
       filesDetailsText,
       "",
       "Action requise: Cette soumission nécessite votre approbation.",
-      "Connectez-vous au panel d'administration pour approuver ou rejeter cette soumission."
+      `Connectez-vous au panel d'administration: ${baseUrl}/admin/login`
     ];
-    const textBody = textBodyLines.join("\n");
+    const textBody = textBodyLines.join("
+");
 
     const emailData = {
       to: "petronildaga@capec-ci.org",
