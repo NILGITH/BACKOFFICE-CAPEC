@@ -1,4 +1,3 @@
-
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -22,11 +21,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.log('Download request received:', { fileUrl, fileName });
 
-    // The fileUrl should be a Supabase public URL
-    // e.g., https://<project-ref>.supabase.co/storage/v1/object/public/<bucket-name>/<file-path>
+    // Vérifier que l'URL est bien une URL Supabase publique
+    if (!fileUrl.includes('/storage/v1/object/public/')) {
+      console.error('URL non valide - pas une URL publique Supabase:', fileUrl);
+      return res.status(400).json({ message: 'Invalid file URL provided. Not a valid Supabase public URL.' });
+    }
+
+    // Parser l'URL Supabase
     const urlParts = fileUrl.split('/storage/v1/object/public/');
     if (urlParts.length < 2) {
-        console.error('Invalid Supabase file URL:', fileUrl);
+        console.error('Impossible de parser l\'URL Supabase:', fileUrl);
         return res.status(400).json({ message: 'Invalid file URL provided. Not a valid Supabase public URL.' });
     }
 
@@ -34,35 +38,54 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const filePath = pathParts.join('/');
 
     if (!bucketName || !filePath) {
-        console.error('Could not parse bucket and path from URL:', { fileUrl, bucketName, filePath });
+        console.error('Bucket ou chemin manquant:', { fileUrl, bucketName, filePath });
         return res.status(400).json({ message: 'Could not determine file path from URL.' });
     }
 
-    console.log('Attempting to download from Supabase Storage:', { bucketName, filePath });
+    console.log('Tentative de téléchargement depuis Supabase Storage:', { bucketName, filePath });
 
+    // Essayer d'abord avec l'URL publique directe
+    try {
+      const response = await fetch(fileUrl);
+      if (response.ok) {
+        const buffer = Buffer.from(await response.arrayBuffer());
+        
+        // Définir les headers pour forcer le téléchargement
+        res.setHeader('Content-Type', 'application/octet-stream');
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        res.setHeader('Content-Length', buffer.length);
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+
+        console.log(`Fichier téléchargé avec succès via URL publique: "${fileName}" (${buffer.length} bytes)`);
+        return res.status(200).send(buffer);
+      }
+    } catch (fetchError) {
+      console.log('Échec du téléchargement direct, tentative via SDK Supabase...', { error: fetchError });
+    }
+
+    // Si l'URL publique ne fonctionne pas, essayer avec le SDK Supabase
     const { data, error } = await supabase.storage
       .from(bucketName)
       .download(filePath);
 
     if (error) {
-      console.error('Supabase Storage download error:', error);
+      console.error('Erreur Supabase Storage:', error);
       return res.status(404).json({ message: `File not found or access denied. Supabase error: ${error.message}` });
     }
 
     if (data) {
       const buffer = Buffer.from(await data.arrayBuffer());
 
-      // Set headers to force download
+      // Définir les headers pour forcer le téléchargement
       res.setHeader('Content-Type', 'application/octet-stream');
       res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
       res.setHeader('Content-Length', buffer.length);
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
 
-      console.log(`Successfully sending file "${fileName}" (${buffer.length} bytes)`);
+      console.log(`Fichier téléchargé avec succès via SDK: "${fileName}" (${buffer.length} bytes)`);
       return res.status(200).send(buffer);
     }
     
-    // This case should ideally not be reached if there's no error and no data
     return res.status(404).json({ message: 'File not found.' });
 
   } catch (error) {

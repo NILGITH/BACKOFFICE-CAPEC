@@ -138,7 +138,7 @@ export const emailService = {
     const textBody = textBodyLines.join("\n");
 
     const emailData = {
-      to: "petronildaga@capec-ci.org",
+      to: "petronildaga@aitech-ci.com",
       subject: "Nouvelle soumission de contenu - CAPEC",
       html: htmlBody,
       text: textBody
@@ -177,7 +177,7 @@ export const emailService = {
     const textBody = textBodyLines.join("\n");
 
     const emailData = {
-      to: "petronildaga@capec-ci.org",
+      to: "petronildaga@aitech-ci.com",
       subject: `Demande de modification ${type} - CAPEC`,
       html: htmlBody,
       text: textBody
@@ -218,7 +218,7 @@ export const emailService = {
     const textBody = textBodyLines.join("\n");
 
     const emailData = {
-      to: "petronildaga@capec-ci.org",
+      to: "petronildaga@aitech-ci.com",
       subject: `Soumission ${status === "approved" ? "approuvée" : "rejetée"} - CAPEC`,
       html: htmlBody,
       text: textBody
@@ -266,7 +266,7 @@ export const emailService = {
     const textBody = textBodyParts.join("\n");
 
     const emailData = {
-      to: "petronildaga@capec-ci.org",
+      to: "petronildaga@aitech-ci.com",
       subject: "Nouvelle demande de modification de menu - CAPEC",
       html: htmlBody,
       text: textBody

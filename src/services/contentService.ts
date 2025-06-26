@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import emailService, { ContentForEmail } from "./emailService";
@@ -107,39 +106,24 @@ export const contentService = {
 
       if (error) {
         console.error('Erreur upload Supabase:', error);
-        // Essayer une deuxième fois avec un nom différent
-        const retryFileName = `${userId}/retry-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const { data: retryData, error: retryError } = await supabase.storage
-          .from('content-files')
-          .upload(retryFileName, file, {
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (retryError) {
-          console.error('Erreur lors du retry upload:', retryError);
-          return null;
-        }
-
-        if (retryData) {
-          const { data: urlData } = supabase.storage
-            .from('content-files')
-            .getPublicUrl(retryData.path);
-          
-          console.log('File uploaded successfully on retry:', urlData.publicUrl);
-          return urlData.publicUrl;
-        }
-        
         return null;
       }
 
       if (data) {
+        // Générer l'URL publique correctement
         const { data: urlData } = supabase.storage
           .from('content-files')
           .getPublicUrl(data.path);
         
         console.log('File uploaded successfully:', urlData.publicUrl);
-        return urlData.publicUrl;
+        
+        // Vérifier que l'URL est bien formée
+        if (urlData.publicUrl && urlData.publicUrl.includes('/storage/v1/object/public/content-files/')) {
+          return urlData.publicUrl;
+        } else {
+          console.error('URL publique mal formée:', urlData.publicUrl);
+          return null;
+        }
       }
 
       return null;
