@@ -1,16 +1,18 @@
+
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types"; // Import Database types
 import emailService, { ContentForEmail } from "./emailService";
 import { menuService } from "./menuService";
 
 export interface ContentSubmission {
   id: string;
   title: string;
-  description?: string;
+  description?: string | null; // Allow null
   content_type: "text" | "image" | "video" | "pdf";
-  content_data?: string;
-  file_urls?: string[];
-  menu_section_id?: string;
-  submenu_section_id?: string;
+  content_data?: string | null; // Allow null
+  file_urls?: string[] | null; // Allow null
+  menu_section_id?: string | null; // Allow null
+  submenu_section_id?: string | null; // Allow null
   status: "pending" | "approved" | "rejected";
   created_by: string;
   created_at: string;
@@ -40,7 +42,7 @@ export const contentService = {
         throw error;
       }
 
-      return data || [];
+      return (data as ContentSubmission[] | null) || [];
     } catch (error) {
       console.error('Erreur dans getContentSubmissions:', error);
       return [];
@@ -49,30 +51,28 @@ export const contentService = {
 
   async createContentSubmission(contentData: ContentFormData, userId: string): Promise<ContentSubmission> {
     try {
-      // Simuler l'upload de fichiers
       let fileUrls: string[] = [];
       if (contentData.files && contentData.files.length > 0) {
-        fileUrls = contentData.files.map(file => 
+        fileUrls = contentData.files.map(file =>
           `https://storage.capec-ci.com/${Date.now()}-${file.name}`
         );
       }
 
-      const newSubmission = {
+      const newSubmissionData: Database['public']['Tables']['content_submissions']['Insert'] = {
         title: contentData.title,
-        description: contentData.description,
+        description: contentData.description || null,
         content_type: contentData.content_type,
-        content_data: contentData.content_data,
-        file_urls: fileUrls,
-        menu_section_id: contentData.menu_section_id,
-        submenu_section_id: contentData.submenu_section_id,
+        content_ contentData.content_data || null,
+        file_urls: fileUrls.length > 0 ? fileUrls : null,
+        menu_section_id: contentData.menu_section_id || null,
+        submenu_section_id: contentData.submenu_section_id || null,
         created_by: userId,
-        status: 'pending' as const
+        status: 'pending',
       };
 
       const { data, error } = await supabase
         .from('content_submissions')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .insert([newSubmission as any]) 
+        .insert([newSubmissionData])
         .select()
         .single();
 
@@ -81,26 +81,27 @@ export const contentService = {
         throw error;
       }
 
-      // Envoyer par email automatiquement avec les noms des menus
-      if (data) { // Add null check for data
+      const resultData = data as ContentSubmission;
+
+      if (resultData) {
         try {
           const menus = await menuService.getMenuSections();
-          const menuName = data.menu_section_id ? 
-            menus.find(m => m.id === data.menu_section_id)?.name || "Menu inconnu" : 
+          const menuName = resultData.menu_section_id ?
+            menus.find(m => m.id === resultData.menu_section_id)?.name || "Menu inconnu" :
             "Non spécifié";
-          const submenuName = data.submenu_section_id ? 
-            menus.find(m => m.id === data.submenu_section_id)?.name || "Sous-menu inconnu" : 
+          const submenuName = resultData.submenu_section_id ?
+            menus.find(m => m.id === resultData.submenu_section_id)?.name || "Sous-menu inconnu" :
             "Non spécifié";
 
           const emailContent: ContentForEmail = {
-            type: data.content_type,
-            title: data.title,
-            description: data.description,
+            type: resultData.content_type,
+            title: resultData.title,
+            description: resultData.description ?? undefined, // Ensure undefined if null for ContentForEmail
             menu: menuName,
             submenu: submenuName,
-            files: data.file_urls?.map(url => ({ 
-              name: url.split("/").pop() || "fichier", 
-              type: data.content_type,
+            files: resultData.file_urls?.map(url => ({
+              name: url.split("/").pop() || "fichier",
+              type: resultData.content_type,
               url: url
             }))
           };
@@ -109,8 +110,7 @@ export const contentService = {
           console.error("Erreur lors de l'envoi de l'email:", emailError);
         }
       }
-
-      return data as ContentSubmission; // data could be null, ensure it's handled or asserted if sure
+      return resultData;
     } catch (error) {
       console.error('Erreur dans createContentSubmission:', error);
       throw error;
@@ -119,13 +119,14 @@ export const contentService = {
 
   async updateContentStatus(id: string, status: "approved" | "rejected"): Promise<ContentSubmission | null> {
     try {
+      const updateData: Partial<Database['public']['Tables']['content_submissions']['Update']> = {
+        status,
+        updated_at: new Date().toISOString()
+      };
+
       const { data, error } = await supabase
         .from('content_submissions')
-        .update({ 
-          status,
-          updated_at: new Date().toISOString()
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any) 
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
@@ -134,8 +135,7 @@ export const contentService = {
         console.error('Erreur lors de la mise à jour du statut:', error);
         throw error;
       }
-
-      return data;
+      return data as ContentSubmission | null;
     } catch (error) {
       console.error('Erreur dans updateContentStatus:', error);
       return null;
@@ -153,7 +153,6 @@ export const contentService = {
         console.error('Erreur lors de la suppression:', error);
         throw error;
       }
-
       return true;
     } catch (error) {
       console.error('Erreur dans deleteContentSubmission:', error);
@@ -165,11 +164,11 @@ export const contentService = {
     try {
       const submissions = await this.getContentSubmissions();
       const result = await emailService.sendAllContentData(submissions);
-      
+
       if (result.success) {
-        return { 
-          success: true, 
-          message: `Contenu envoyé avec succès à petronildaga@capec-ci.org (${submissions.length} éléments)` 
+        return {
+          success: true,
+          message: `Contenu envoyé avec succès à petronildaga@capec-ci.org (${submissions.length} éléments)`
         };
       } else {
         throw new Error(result.message || "Erreur inconnue lors de l'envoi de l'email");
