@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { menuService, MenuChangeRequest } from "@/services/menuService";
-import { CheckCircle, Clock, XCircle, Send } from "lucide-react";
+import { CheckCircle, Clock, XCircle, Send, ArrowLeft } from "lucide-react";
 
 export default function MenusPage() {
   const { user, loading } = useAuth();
@@ -56,7 +56,7 @@ export default function MenusPage() {
         parent_menu_name: isSubmenu ? parentMenuName : undefined
       }, user.email);
 
-      setMessage("Demande de modification soumise avec succès!");
+      setMessage("Demande de modification soumise avec succès et envoyée par email à petronildaga@aitech-ci.com!");
       setOldMenuName("");
       setNewMenuName("");
       setIsSubmenu(false);
@@ -103,6 +103,17 @@ export default function MenusPage() {
   return (
     <Layout title="Gestion des Menus">
       <div className="space-y-6">
+        <div className="flex items-center gap-4 mb-4">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/dashboard")}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour au tableau de bord
+          </Button>
+        </div>
+
         <Card className="border-orange-200">
           <CardHeader>
             <CardTitle className="text-xl text-orange-800 flex items-center gap-2">

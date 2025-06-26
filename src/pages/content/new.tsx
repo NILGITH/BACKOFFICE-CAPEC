@@ -18,7 +18,8 @@ import {
   Video as VideoIcon, // Renamed
   FileIcon as FileIconLucide, // Renamed
   Plus, 
-  X 
+  X, 
+  ArrowLeft 
 } from "lucide-react";
 
 export default function NewContentPage() {
@@ -97,7 +98,7 @@ export default function NewContentPage() {
 
       await contentService.createContentSubmission(formData, user.email);
 
-      setMessage("Contenu soumis avec succès!");
+      setMessage("Contenu soumis avec succès et envoyé par email à petronildaga@aitech-ci.com!");
       setTitle("");
       setDescription("");
       setContentData("");
@@ -144,6 +145,17 @@ export default function NewContentPage() {
   return (
     <Layout title="Ajouter du Contenu">
       <div className="max-w-4xl mx-auto space-y-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/content")}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour à la liste
+          </Button>
+        </div>
+
         <Card className="border-green-200">
           <CardHeader>
             <CardTitle className="text-xl text-green-800 flex items-center gap-2">

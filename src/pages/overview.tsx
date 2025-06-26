@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { contentService, ContentSubmission } from "@/services/contentService";
 import { menuService, MenuSection, MenuChangeRequest } from "@/services/menuService";
+import emailService from "@/services/emailService";
 import { 
   FileText, 
   Image as ImageIcon, // Renamed
@@ -20,6 +21,7 @@ import {
   Menu,
   Settings
 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 export default function OverviewPage() {
   const { user, loading } = useAuth();
@@ -120,14 +122,9 @@ export default function OverviewPage() {
 
     try {
       const allData = {
-        to: "petronildaga@aitech-ci.com",
-        subject: "Vue d'ensemble complète - CAPEC-CI",
-        content: {
-          menus: menus,
-          menuRequests: menuRequests,
-          contentSubmissions: submissions
-        },
-        timestamp: new Date().toISOString(),
+        menus: menus,
+        menuRequests: menuRequests,
+        contentSubmissions: submissions,
         summary: {
           totalMenus: menus.length,
           totalSubmenus: menus.filter(m => m.parent_id).length,
@@ -139,10 +136,13 @@ export default function OverviewPage() {
         }
       };
 
-      console.log("Vue d'ensemble complète envoyée par email:", allData);
+      const result = await emailService.sendOverviewData(allData);
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setMessage(`Vue d'ensemble complète envoyée avec succès à petronildaga@aitech-ci.com`);
+      if (result.success) {
+        setMessage(`Vue d'ensemble complète envoyée avec succès à petronildaga@aitech-ci.com`);
+      } else {
+        setMessage("Erreur lors de l'envoi des données");
+      }
     } catch (error) {
       setMessage("Erreur lors de l'envoi des données");
       console.error(error);
@@ -168,6 +168,17 @@ export default function OverviewPage() {
   return (
     <Layout title="Vue d'ensemble">
       <div className="space-y-6">
+        <div className="flex items-center gap-4 mb-4">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/dashboard")}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour au tableau de bord
+          </Button>
+        </div>
+
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Vue d'ensemble complète</h1>

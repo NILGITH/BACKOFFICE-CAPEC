@@ -1,3 +1,4 @@
+import emailService from "./emailService";
 
 export interface ContentSubmission {
   id: string;
@@ -101,6 +102,14 @@ export const contentService = {
     }
 
     mockContentSubmissions.unshift(newSubmission);
+
+    // Envoyer par email automatiquement
+    try {
+      await emailService.sendContentSubmission(newSubmission, userId);
+    } catch (error) {
+      console.error("Erreur lors de l'envoi de l'email:", error);
+    }
+
     return newSubmission;
   },
 
@@ -124,25 +133,16 @@ export const contentService = {
   async sendAllContentToEmail() {
     try {
       const submissions = await this.getContentSubmissions();
+      const result = await emailService.sendAllContentData(submissions);
       
-      const emailData = {
-        to: "petronildaga@aitech-ci.com",
-        subject: "Soumissions de contenu CAPEC-CI",
-        content: submissions,
-        timestamp: new Date().toISOString(),
-        totalSubmissions: submissions.length,
-        pendingSubmissions: submissions.filter(s => s.status === "pending").length,
-        approvedSubmissions: submissions.filter(s => s.status === "approved").length
-      };
-
-      console.log("Données envoyées par email:", emailData);
-      
-      // Simulation d'envoi d'email réussi
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return { 
-        success: true, 
-        message: `Contenu envoyé avec succès à petronildaga@aitech-ci.com (${submissions.length} éléments)` 
-      };
+      if (result.success) {
+        return { 
+          success: true, 
+          message: `Contenu envoyé avec succès à petronildaga@aitech-ci.com (${submissions.length} éléments)` 
+        };
+      } else {
+        throw new Error(result.message);
+      }
     } catch (error) {
       console.error("Erreur lors de l'envoi:", error);
       throw new Error("Erreur lors de l'envoi des données par email");

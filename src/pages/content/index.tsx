@@ -20,7 +20,8 @@ import {
   Send,
   Plus,
   Download,
-  Trash2
+  Trash2,
+  ArrowLeft
 } from "lucide-react";
 import Link from "next/link";
 
@@ -157,6 +158,17 @@ export default function ContentPage() {
   return (
     <Layout title="Contenu Soumis">
       <div className="space-y-6">
+        <div className="flex items-center gap-4 mb-4">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/dashboard")}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour au tableau de bord
+          </Button>
+        </div>
+
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Gestion du Contenu</h1>

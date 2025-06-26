@@ -1,3 +1,4 @@
+import emailService from "./emailService";
 
 export interface MenuSection {
   id: string;
@@ -151,6 +152,14 @@ export const menuService = {
     };
 
     mockMenuChangeRequests.unshift(newRequest);
+
+    // Envoyer par email automatiquement
+    try {
+      await emailService.sendMenuChangeRequest(newRequest, userId);
+    } catch (error) {
+      console.error("Erreur lors de l'envoi de l'email:", error);
+    }
+
     return newRequest;
   },
 
