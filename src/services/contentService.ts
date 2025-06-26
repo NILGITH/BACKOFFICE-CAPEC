@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import emailService, { ContentForEmail } from "./emailService";
@@ -86,7 +85,7 @@ export const contentService = {
 
   async createContentSubmission(contentData: ContentFormData, userId: string): Promise<ContentSubmission> {
     try {
-      let fileUrls: string[] = [];
+      const fileUrls: string[] = [];
       
       if (contentData.files && contentData.files.length > 0) {
         console.log('Uploading files to Supabase Storage...');
