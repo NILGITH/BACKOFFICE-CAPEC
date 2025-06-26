@@ -1,7 +1,6 @@
 
 import { NextApiRequest, NextApiResponse } from 'next';
-import path from 'path';
-import fs from 'fs';
+import { supabase } from '@/integrations/supabase/client';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -15,15 +14,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ message: 'URL du fichier et nom requis' });
     }
 
+    console.log('Téléchargement demandé:', { fileUrl, fileName });
+
     // Pour les fichiers mock, on simule le téléchargement
     if (typeof fileUrl === 'string' && fileUrl.includes('mock-storage.capec-ci.com')) {
-      // Simulation d'un fichier pour les tests
       const mockContent = `Contenu simulé du fichier: ${fileName}
 Date de création: ${new Date().toISOString()}
 Type: Fichier de test CAPEC
+Application: Système de gestion de contenu CAPEC
+URL de production: https://backoffice.capec-ci.org
       
 Ceci est un fichier de démonstration généré automatiquement.
-Soumis via l'application CAPEC pour mise à jour du site cepec-ci.org`;
+Soumis via l'application CAPEC pour mise à jour du site capec-ci.org
+
+Détails techniques:
+- Fichier généré automatiquement
+- Système de téléchargement fonctionnel
+- Intégration avec Supabase Storage
+- Compatible avec l'URL de production
+
+Ce fichier peut être téléchargé depuis les emails de notification.`;
 
       res.setHeader('Content-Type', 'application/octet-stream');
       res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
@@ -32,26 +42,66 @@ Soumis via l'application CAPEC pour mise à jour du site cepec-ci.org`;
       return res.status(200).send(mockContent);
     }
 
-    // Pour les vrais fichiers (à implémenter selon votre système de stockage)
-    if (typeof fileUrl === 'string' && fileUrl.startsWith('http')) {
-      // Rediriger vers l'URL du fichier
-      return res.redirect(fileUrl);
+    // Pour les fichiers Supabase Storage
+    if (typeof fileUrl === 'string' && fileUrl.includes('supabase')) {
+      try {
+        // Extraire le chemin du fichier depuis l'URL Supabase
+        const urlParts = fileUrl.split('/storage/v1/object/public/');
+        if (urlParts.length > 1) {
+          const [bucket, ...pathParts] = urlParts[1].split('/');
+          const filePath = pathParts.join('/');
+          
+          // Télécharger le fichier depuis Supabase Storage
+          const { data, error } = await supabase.storage
+            .from(bucket)
+            .download(filePath);
+
+          if (error) {
+            console.error('Erreur Supabase Storage:', error);
+            return res.status(404).json({ message: 'Fichier non trouvé dans le stockage' });
+          }
+
+          if (data) {
+            const buffer = await data.arrayBuffer();
+            
+            res.setHeader('Content-Type', data.type || 'application/octet-stream');
+            res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+            res.setHeader('Content-Length', buffer.byteLength);
+            
+            return res.status(200).send(Buffer.from(buffer));
+          }
+        }
+      } catch (supabaseError) {
+        console.error('Erreur lors du téléchargement Supabase:', supabaseError);
+      }
     }
 
-    // Si c'est un fichier local
-    if (typeof fileUrl === 'string' && !fileUrl.startsWith('http')) {
-      const filePath = path.join(process.cwd(), 'public', 'uploads', fileUrl);
-      
-      if (fs.existsSync(filePath)) {
-        const fileBuffer = fs.readFileSync(filePath);
-        const stats = fs.statSync(filePath);
+    // Pour les URLs HTTP externes
+    if (typeof fileUrl === 'string' && fileUrl.startsWith('http')) {
+      try {
+        const response = await fetch(fileUrl);
         
-        res.setHeader('Content-Type', 'application/octet-stream');
+        if (!response.ok) {
+          return res.status(404).json({ message: 'Fichier non accessible' });
+        }
+
+        const buffer = await response.arrayBuffer();
+        const contentType = response.headers.get('content-type') || 'application/octet-stream';
+        
+        res.setHeader('Content-Type', contentType);
         res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-        res.setHeader('Content-Length', stats.size);
+        res.setHeader('Content-Length', buffer.byteLength);
         
-        return res.status(200).send(fileBuffer);
+        return res.status(200).send(Buffer.from(buffer));
+      } catch (fetchError) {
+        console.error('Erreur lors du téléchargement HTTP:', fetchError);
+        return res.status(500).json({ message: 'Erreur lors du téléchargement du fichier' });
       }
+    }
+
+    // Redirection simple pour les autres cas
+    if (typeof fileUrl === 'string') {
+      return res.redirect(302, fileUrl);
     }
 
     return res.status(404).json({ message: 'Fichier non trouvé' });
