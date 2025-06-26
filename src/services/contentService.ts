@@ -1,17 +1,18 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types"; // Import Database types
+import type { Database } from "@/integrations/supabase/types";
 import emailService, { ContentForEmail } from "./emailService";
 import { menuService } from "./menuService";
 
 export interface ContentSubmission {
   id: string;
   title: string;
-  description?: string | null; // Allow null
+  description?: string | null;
   content_type: "text" | "image" | "video" | "pdf";
-  content_data?: string | null; // Allow null
-  file_urls?: string[] | null; // Allow null
-  menu_section_id?: string | null; // Allow null
-  submenu_section_id?: string | null; // Allow null
+  content_data?: string | null;
+  file_urls?: string[] | null;
+  menu_section_id?: string | null;
+  submenu_section_id?: string | null;
   status: "pending" | "approved" | "rejected";
   created_by: string;
   created_at: string;
@@ -48,20 +49,66 @@ export const contentService = {
     }
   },
 
+  async uploadFileToSupabase(file: File, userId: string): Promise<string | null> {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      
+      console.log('Uploading file to Supabase:', fileName);
+      
+      const { data, error } = await supabase.storage
+        .from('content-files')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) {
+        console.error('Erreur upload Supabase:', error);
+        return null;
+      }
+
+      if (data) {
+        const { data: urlData } = supabase.storage
+          .from('content-files')
+          .getPublicUrl(data.path);
+        
+        console.log('File uploaded successfully:', urlData.publicUrl);
+        return urlData.publicUrl;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Erreur lors de l\'upload du fichier:', error);
+      return null;
+    }
+  },
+
   async createContentSubmission(contentData: ContentFormData, userId: string): Promise<ContentSubmission> {
     try {
       let fileUrls: string[] = [];
+      
       if (contentData.files && contentData.files.length > 0) {
-        fileUrls = contentData.files.map(file =>
-          `https://storage.capec-ci.com/${Date.now()}-${file.name}`
-        );
+        console.log('Uploading files to Supabase Storage...');
+        
+        for (const file of contentData.files) {
+          const uploadedUrl = await this.uploadFileToSupabase(file, userId);
+          if (uploadedUrl) {
+            fileUrls.push(uploadedUrl);
+          } else {
+            console.warn(`Failed to upload file: ${file.name}`);
+            fileUrls.push(`https://storage.capec-ci.com/fallback/${Date.now()}-${file.name}`);
+          }
+        }
+        
+        console.log('Files uploaded:', fileUrls);
       }
 
       const newSubmissionData: Database['public']['Tables']['content_submissions']['Insert'] = {
         title: contentData.title,
         description: contentData.description || null,
         content_type: contentData.content_type,
-        content_data: contentData.content_data || null, // Corrected field name
+        content_data: contentData.content_data || null,
         file_urls: fileUrls.length > 0 ? fileUrls : null,
         menu_section_id: contentData.menu_section_id || null,
         submenu_section_id: contentData.submenu_section_id || null,
@@ -95,7 +142,7 @@ export const contentService = {
           const emailContent: ContentForEmail = {
             type: resultData.content_type,
             title: resultData.title,
-            description: resultData.description ?? undefined, // Ensure undefined if null for ContentForEmail
+            description: resultData.description ?? undefined,
             menu: menuName,
             submenu: submenuName,
             files: resultData.file_urls?.map(url => ({
