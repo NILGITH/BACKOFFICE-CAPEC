@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,11 +47,20 @@ export default function LoginPage() {
         <meta name="description" content="Connexion à l'application de gestion de contenu CEPEC-CI" />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-green-50 to-orange-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-xl border-0">
+          <CardHeader className="text-center space-y-4">
+            <div className="flex justify-center">
+              <Image
+                src="/logo-capec-mcdb23oy.png"
+                alt="Logo CAPEC"
+                width={120}
+                height={120}
+                className="object-contain"
+              />
+            </div>
             <CardTitle className="text-2xl font-bold text-gray-900">BACK CAPEC</CardTitle>
-            <CardDescription>
+            <CardDescription className="text-gray-600">
               Connectez-vous pour gérer le contenu du site CEPEC-CI
             </CardDescription>
           </CardHeader>
@@ -66,6 +76,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={isLoading}
+                  className="border-gray-300 focus:border-primary focus:ring-primary"
                 />
               </div>
               
@@ -80,6 +91,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={isLoading}
+                    className="border-gray-300 focus:border-primary focus:ring-primary pr-10"
                   />
                   <Button
                     type="button"
@@ -90,9 +102,9 @@ export default function LoginPage() {
                     disabled={isLoading}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className="h-4 w-4 text-gray-500" />
                     ) : (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-4 w-4 text-gray-500" />
                     )}
                   </Button>
                 </div>
@@ -104,7 +116,11 @@ export default function LoginPage() {
                 </Alert>
               )}
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button 
+                type="submit" 
+                className="w-full bg-primary hover:bg-primary/90 text-white font-medium" 
+                disabled={isLoading}
+              >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -116,10 +132,10 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-800 font-medium">Compte de test :</p>
-              <p className="text-sm text-blue-600">Email: admin@cepec-ci.org</p>
-              <p className="text-sm text-blue-600">Mot de passe: admin123</p>
+            <div className="mt-6 p-4 bg-gradient-to-r from-orange-50 to-green-50 rounded-lg border border-orange-200">
+              <p className="text-sm text-orange-800 font-medium">Compte de test :</p>
+              <p className="text-sm text-orange-700">Email: admin@cepec-ci.org</p>
+              <p className="text-sm text-orange-700">Mot de passe: admin123</p>
             </div>
           </CardContent>
         </Card>

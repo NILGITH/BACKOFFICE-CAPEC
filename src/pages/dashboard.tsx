@@ -1,10 +1,10 @@
-
 import Layout from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { FileText, Menu, Plus, Eye, Upload, Settings } from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardPage() {
@@ -28,52 +28,96 @@ export default function DashboardPage() {
   return (
     <Layout title="Tableau de bord">
       <div className="space-y-6">
-        <Card>
+        <Card className="border-orange-200 bg-gradient-to-r from-orange-50 to-green-50">
           <CardHeader>
-            <CardTitle>Bienvenue, {user.name}!</CardTitle>
+            <CardTitle className="text-2xl text-gray-900">
+              Bienvenue, {user.name}!
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p>C'est ici que vous pourrez gérer le contenu du site CEPEC-CI.</p>
+            <p className="text-gray-700">
+              Gérez facilement le contenu du site CEPEC-CI. Ajoutez des textes, images, vidéos et documents PDF pour mettre à jour les menus et sous-menus.
+            </p>
           </CardContent>
         </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
+          <Card className="hover:shadow-lg transition-shadow border-orange-100">
             <CardHeader>
-              <CardTitle>Gestion des Menus</CardTitle>
+              <div className="flex items-center space-x-2">
+                <Menu className="h-5 w-5 text-orange-600" />
+                <CardTitle className="text-lg">Gestion des Menus</CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
-              <p className="mb-4">Organisez les menus et sous-menus du site.</p>
+              <p className="mb-4 text-gray-600">Organisez les menus et sous-menus du site.</p>
               <Link href="/menus" passHref>
-                <Button>Gérer les menus</Button>
+                <Button className="w-full bg-orange-600 hover:bg-orange-700">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Gérer les menus
+                </Button>
               </Link>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="hover:shadow-lg transition-shadow border-green-100">
             <CardHeader>
-              <CardTitle>Ajouter du Contenu</CardTitle>
+              <div className="flex items-center space-x-2">
+                <Plus className="h-5 w-5 text-green-600" />
+                <CardTitle className="text-lg">Ajouter du Contenu</CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
-              <p className="mb-4">Soumettez du texte, des images, vidéos ou PDFs.</p>
+              <p className="mb-4 text-gray-600">Soumettez du texte, des images, vidéos ou PDFs.</p>
               <Link href="/content/new" passHref>
-                <Button>Ajouter du contenu</Button>
+                <Button className="w-full bg-green-600 hover:bg-green-700">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Ajouter du contenu
+                </Button>
               </Link>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="hover:shadow-lg transition-shadow border-orange-100">
             <CardHeader>
-              <CardTitle>Voir le Contenu Soumis</CardTitle>
+              <div className="flex items-center space-x-2">
+                <Eye className="h-5 w-5 text-orange-600" />
+                <CardTitle className="text-lg">Contenu Soumis</CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
-              <p className="mb-4">Revoyez et gérez le contenu en attente ou approuvé.</p>
+              <p className="mb-4 text-gray-600">Revoyez et gérez le contenu en attente ou approuvé.</p>
               <Link href="/content" passHref>
-                <Button>Voir le contenu</Button>
+                <Button className="w-full bg-orange-600 hover:bg-orange-700">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Voir le contenu
+                </Button>
               </Link>
             </CardContent>
           </Card>
         </div>
+
+        <Card className="border-green-200">
+          <CardHeader>
+            <CardTitle className="text-lg text-green-800">Statistiques rapides</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center p-4 bg-orange-50 rounded-lg">
+                <div className="text-2xl font-bold text-orange-600">7</div>
+                <div className="text-sm text-gray-600">Menus actifs</div>
+              </div>
+              <div className="text-center p-4 bg-green-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">2</div>
+                <div className="text-sm text-gray-600">Contenus en attente</div>
+              </div>
+              <div className="text-center p-4 bg-orange-50 rounded-lg">
+                <div className="text-2xl font-bold text-orange-600">1</div>
+                <div className="text-sm text-gray-600">Contenu approuvé</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </Layout>
   );
