@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
@@ -8,16 +9,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, Shield, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   
-  const { login } = useAuth();
+  const { adminLogin } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,15 +28,15 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const success = await login(email, password);
+      const success = await adminLogin(email, password);
       if (success) {
-        router.push("/dashboard");
+        router.push("/admin/approvals");
       } else {
-        setError("Email ou mot de passe incorrect");
+        setError("Email ou mot de passe incorrect pour l'administration");
       }
     } catch (loginError) {
-      console.error("Login error:", loginError);
-      setError("Une erreur est survenue lors de la connexion");
+      console.error("Admin login error:", loginError);
+      setError("Une erreur est survenue lors de la connexion administrateur");
     } finally {
       setIsLoading(false);
     }
@@ -43,11 +45,11 @@ export default function LoginPage() {
   return (
     <>
       <Head>
-        <title>Connexion - BACK CAPEC</title>
-        <meta name="description" content="Connexion à l'application de gestion de contenu CEPEC-CI" />
+        <title>Connexion Administrateur - BACK CAPEC</title>
+        <meta name="description" content="Connexion administrateur pour l'approbation des contenus CAPEC-CI" />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-green-50 to-orange-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100 flex items-center justify-center p-4">
         <Card className="w-full max-w-md shadow-xl border-0">
           <CardHeader className="text-center space-y-4">
             <div className="flex justify-center">
@@ -59,29 +61,32 @@ export default function LoginPage() {
                 className="object-contain"
               />
             </div>
-            <CardTitle className="text-2xl font-bold text-gray-900">BACK CAPEC</CardTitle>
+            <div className="flex items-center justify-center gap-2">
+              <Shield className="h-6 w-6 text-blue-600" />
+              <CardTitle className="text-2xl font-bold text-gray-900">Administration CAPEC</CardTitle>
+            </div>
             <CardDescription className="text-gray-600">
-              Connectez-vous pour gérer le contenu du site CEPEC-CI
+              Connexion sécurisée pour l'approbation des contenus
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email Administrateur</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="votre@email.com"
+                  placeholder="admin@capec-ci.org"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={isLoading}
-                  className="border-gray-300 focus:border-primary focus:ring-primary"
+                  className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
+                <Label htmlFor="password">Mot de passe Administrateur</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -91,7 +96,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="border-gray-300 focus:border-primary focus:ring-primary pr-10"
+                    className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 pr-10"
                   />
                   <Button
                     type="button"
@@ -118,7 +123,7 @@ export default function LoginPage() {
 
               <Button 
                 type="submit" 
-                className="w-full bg-primary hover:bg-primary/90 text-white font-medium" 
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium" 
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -127,15 +132,27 @@ export default function LoginPage() {
                     Connexion...
                   </>
                 ) : (
-                  "Se connecter"
+                  <>
+                    <Shield className="mr-2 h-4 w-4" />
+                    Se connecter en tant qu'Admin
+                  </>
                 )}
               </Button>
             </form>
 
-            <div className="mt-6 p-4 bg-gradient-to-r from-orange-50 to-green-50 rounded-lg border border-orange-200">
-              <p className="text-sm text-orange-800 font-medium">Compte de test :</p>
-              <p className="text-sm text-orange-700">Email: admin@capec-ci.org</p>
-              <p className="text-sm text-orange-700">Mot de passe: admin123</p>
+            <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-800 font-medium">Compte Administrateur :</p>
+              <p className="text-sm text-blue-700">Email: admin@capec-ci.org</p>
+              <p className="text-sm text-blue-700">Mot de passe: admin456</p>
+            </div>
+
+            <div className="mt-4 text-center">
+              <Link href="/login">
+                <Button variant="ghost" className="text-gray-600 hover:text-gray-900">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Retour à la connexion normale
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>

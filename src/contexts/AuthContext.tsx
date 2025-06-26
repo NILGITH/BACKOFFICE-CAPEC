@@ -1,41 +1,66 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { User } from "@/types";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: "user" | "admin";
+}
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
   loading: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  adminLogin: (email: string, password: string) => Promise<boolean>;
+  logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  loading: false,
+  login: async () => false,
+  adminLogin: async () => false,
+  logout: () => {}
+});
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const savedUser = localStorage.getItem("cepec_user");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
-  }, []);
+  const [loading, setLoading] = useState(false);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setLoading(true);
     
-    // Mock authentication - replace with real backend
-    if (email === "admin@cepec-ci.org" && password === "admin123") {
-      const mockUser: User = {
+    // Simulation d'authentification pour utilisateur normal
+    if (email === "admin@capec-ci.org" && password === "admin123") {
+      const userData: User = {
         id: "1",
-        email: email,
-        name: "Administrateur CEPEC",
+        name: "Administrateur CAPEC",
+        email: "admin@capec-ci.org",
+        role: "user"
+      };
+      setUser(userData);
+      localStorage.setItem("user", JSON.stringify(userData));
+      setLoading(false);
+      return true;
+    }
+    
+    setLoading(false);
+    return false;
+  };
+
+  const adminLogin = async (email: string, password: string): Promise<boolean> => {
+    setLoading(true);
+    
+    // Simulation d'authentification pour administrateur d'approbation
+    if (email === "admin@capec-ci.org" && password === "admin456") {
+      const userData: User = {
+        id: "2",
+        name: "Super Administrateur CAPEC",
+        email: "admin@capec-ci.org",
         role: "admin"
       };
-      setUser(mockUser);
-      localStorage.setItem("cepec_user", JSON.stringify(mockUser));
+      setUser(userData);
+      localStorage.setItem("user", JSON.stringify(userData));
       setLoading(false);
       return true;
     }
@@ -46,20 +71,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("cepec_user");
+    localStorage.removeItem("user");
   };
 
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, loading, login, adminLogin, logout }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-}
+export const useAuth = () => useContext(AuthContext);

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Layout from "@/components/Layout";
@@ -37,13 +36,13 @@ export default function ApprovalsPage() {
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
+    if (!loading && (!user || user.role !== "admin")) {
+      router.push("/admin/login");
     }
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (user) {
+    if (user && user.role === "admin") {
       loadData();
     }
   }, [user]);
@@ -152,7 +151,7 @@ export default function ApprovalsPage() {
     return menu?.name || "Menu inconnu";
   };
 
-  if (loading || isLoading || !user) {
+  if (loading || isLoading || !user || user.role !== "admin") {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p>Chargement...</p>

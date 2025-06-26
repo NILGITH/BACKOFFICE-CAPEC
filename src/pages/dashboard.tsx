@@ -104,11 +104,11 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="mb-4 text-gray-600">Approuvez ou rejetez les soumissions en attente.</p>
-              <Link href="/admin/approvals" passHref>
+              <p className="mb-4 text-gray-600">Accès administrateur pour approuver les soumissions.</p>
+              <Link href="/admin/login" passHref>
                 <Button className="w-full bg-blue-600 hover:bg-blue-700">
                   <Settings className="mr-2 h-4 w-4" />
-                  Gérer les approbations
+                  Connexion Admin
                 </Button>
               </Link>
             </CardContent>
