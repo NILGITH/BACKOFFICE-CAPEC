@@ -61,7 +61,7 @@ export const contentService = {
         title: contentData.title,
         description: contentData.description || null,
         content_type: contentData.content_type,
-        content_data: contentData.content_data || null, // Corrected this line
+        content_data: contentData.content_data || null, // Ensuring this line is correct
         file_urls: fileUrls.length > 0 ? fileUrls : null,
         menu_section_id: contentData.menu_section_id || null,
         submenu_section_id: contentData.submenu_section_id || null,
