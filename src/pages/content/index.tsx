@@ -10,10 +10,10 @@ import { contentService, ContentSubmission } from "@/services/contentService";
 import { menuService, MenuSection } from "@/services/menuService";
 import { 
   Eye, 
-  FileText as FileTextIcon, // Renamed to avoid conflict if FileText is used as component
-  Image as ImageIcon, // Renamed to avoid conflict
-  Video as VideoIcon, // Renamed to avoid conflict
-  FileIcon as FileIconLucide, // Renamed to avoid conflict
+  FileText, // Corrected: This is the actual import name
+  Image as ImageIcon, 
+  Video as VideoIcon, 
+  FileIcon as FileIconLucide, 
   CheckCircle, 
   Clock, 
   XCircle, 
@@ -61,18 +61,39 @@ export default function ContentPage() {
     }
   };
 
+  const handleSendAllContent = async () => {
+    setIsSending(true);
+    setMessage("");
+
+    try {
+      const result = await contentService.sendAllContentToEmail();
+      setMessage(result.message);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Erreur lors de l'envoi";
+      setMessage(errorMessage);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const getMenuName = (menuId?: string) => {
+    if (!menuId) return "Non assigné";
+    const menu = menus.find(m => m.id === menuId);
+    return menu?.name || "Menu inconnu";
+  };
+
   const getContentTypeIcon = (type: string) => {
     switch (type) {
       case "text":
-        return <FileTextIcon className="h-5 w-5 text-blue-600" />;
+        return <FileText className="h-4 w-4 text-blue-600" />; // Usage corrected
       case "image":
-        return <ImageIcon className="h-5 w-5 text-green-600" />;
+        return <ImageIcon className="h-4 w-4 text-green-600" />;
       case "video":
-        return <VideoIcon className="h-5 w-5 text-purple-600" />;
+        return <VideoIcon className="h-4 w-4 text-purple-600" />;
       case "pdf":
-        return <FileIconLucide className="h-5 w-5 text-red-600" />;
+        return <FileIconLucide className="h-4 w-4 text-red-600" />;
       default:
-        return <FileTextIcon className="h-5 w-5 text-gray-600" />;
+        return <FileText className="h-4 w-4 text-gray-600" />; // Usage corrected
     }
   };
 
@@ -109,37 +130,18 @@ export default function ContentPage() {
     }
   };
 
-  const getMenuName = (menuId?: string) => {
-    if (!menuId) return "Non assigné";
-    const menu = menus.find(m => m.id === menuId);
-    return menu?.name || "Menu inconnu";
-  };
-
-  const handleSendAllContent = async () => {
-    setIsSending(true);
-    setMessage("");
-
-    try {
-      const result = await contentService.sendAllContentToEmail();
-      setMessage(result.message);
-    } catch (error) {
-      setMessage("Erreur lors de l'envoi des données");
-      console.error(error);
-    } finally {
-      setIsSending(false);
-    }
-  };
+  const pendingSubmissions = submissions.filter(s => s.status === "pending");
+  const approvedSubmissions = submissions.filter(s => s.status === "approved");
+  const rejectedSubmissions = submissions.filter(s => s.status === "rejected");
 
   const handleDeleteSubmission = async (id: string) => {
-    if (confirm("Êtes-vous sûr de vouloir supprimer cette soumission ?")) {
-      try {
-        await contentService.deleteContentSubmission(id);
-        setSubmissions(prev => prev.filter(s => s.id !== id));
-        setMessage("Soumission supprimée avec succès");
-      } catch (error) {
-        setMessage("Erreur lors de la suppression");
-        console.error(error);
-      }
+    try {
+      await contentService.deleteContentSubmission(id);
+      setMessage("Soumission supprimée avec succès.");
+      loadData(); // Recharger les données après suppression
+    } catch (error) {
+      setMessage("Erreur lors de la suppression de la soumission.");
+      console.error("Erreur lors de la suppression:", error);
     }
   };
 
@@ -151,12 +153,8 @@ export default function ContentPage() {
     );
   }
 
-  const pendingSubmissions = submissions.filter(s => s.status === "pending");
-  const approvedSubmissions = submissions.filter(s => s.status === "approved");
-  const rejectedSubmissions = submissions.filter(s => s.status === "rejected");
-
   return (
-    <Layout title="Contenu Soumis">
+    <Layout title="Gestion du contenu">
       <div className="space-y-6">
         <div className="flex items-center gap-4 mb-4">
           <Button
@@ -171,20 +169,18 @@ export default function ContentPage() {
 
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Gestion du Contenu</h1>
-            <p className="text-gray-600">Vue d'ensemble de tous les contenus soumis</p>
+            <h1 className="text-2xl font-bold text-gray-900">Gestion du contenu</h1>
+            <p className="text-gray-600">Gérez toutes les soumissions de contenu</p>
           </div>
-          <div className="flex gap-3">
-            <Link href="/content/new">
-              <Button className="bg-green-600 hover:bg-green-700">
-                <Plus className="mr-2 h-4 w-4" />
-                Ajouter du contenu
-              </Button>
-            </Link>
+          <div className="flex gap-2">
+            <Button onClick={() => router.push("/content/new")} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="mr-2 h-4 w-4" />
+              Nouveau contenu
+            </Button>
             <Button 
               onClick={handleSendAllContent}
               disabled={isSending}
-              className="bg-orange-600 hover:bg-orange-700"
+              variant="outline"
             >
               <Send className="mr-2 h-4 w-4" />
               {isSending ? "Envoi..." : "Envoyer tout par email"}
@@ -246,7 +242,7 @@ export default function ContentPage() {
           <CardContent>
             {submissions.length === 0 ? (
               <div className="text-center py-8">
-                <FileTextIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" /> {/* Usage corrected */}
                 <p className="text-gray-600">Aucun contenu soumis pour le moment</p>
                 <Link href="/content/new">
                   <Button className="mt-4 bg-green-600 hover:bg-green-700">

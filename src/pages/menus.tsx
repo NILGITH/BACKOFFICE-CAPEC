@@ -8,19 +8,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
-import { menuService, MenuChangeRequest } from "@/services/menuService";
-import { CheckCircle, Clock, XCircle, Send, ArrowLeft } from "lucide-react";
+import { menuService, MenuChangeRequest, MenuSection } from "@/services/menuService";
+import { CheckCircle, Clock, XCircle, Send, ArrowLeft, Plus } from "lucide-react";
 
 export default function MenusPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [oldMenuName, setOldMenuName] = useState("");
-  const [newMenuName, setNewMenuName] = useState("");
-  const [isSubmenu, setIsSubmenu] = useState(false);
-  const [parentMenuName, setParentMenuName] = useState("");
+  // const [menus, setMenus] = useState<MenuSection[]>([]); // Removed unused state
+  const [requests, setRequests] = useState<MenuChangeRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    oldMenuName: "",
+    newMenuName: "",
+    isSubmenu: false,
+    parentMenuName: ""
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
-  const [requests, setRequests] = useState<MenuChangeRequest[]>([]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -29,15 +34,24 @@ export default function MenusPage() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    loadRequests();
-  }, []);
+    if (user) {
+      loadData();
+    }
+  }, [user]);
 
-  const loadRequests = async () => {
+  const loadData = async () => {
     try {
-      const data = await menuService.getMenuChangeRequests();
-      setRequests(data);
+      // const [menusData, requestsData] = await Promise.all([ // Modified to fetch only requests
+      //   menuService.getMenuSections(),
+      //   menuService.getMenuChangeRequests()
+      // ]);
+      // setMenus(menusData); // Removed
+      const requestsData = await menuService.getMenuChangeRequests();
+      setRequests(requestsData);
     } catch (error) {
-      console.error("Erreur lors du chargement des demandes:", error);
+      console.error("Erreur lors du chargement des données:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -50,20 +64,23 @@ export default function MenusPage() {
 
     try {
       await menuService.createMenuChangeRequest({
-        old_menu_name: oldMenuName,
-        new_menu_name: newMenuName,
-        is_submenu: isSubmenu,
-        parent_menu_name: isSubmenu ? parentMenuName : undefined
-      }, user.email);
+        old_menu_name: formData.oldMenuName,
+        new_menu_name: formData.newMenuName,
+        is_submenu: formData.isSubmenu,
+        parent_menu_name: formData.isSubmenu ? formData.parentMenuName : undefined
+      }, user.id);
 
-      setMessage("Demande de modification soumise avec succès et envoyée par email à petronildaga@aitech-ci.com!");
-      setOldMenuName("");
-      setNewMenuName("");
-      setIsSubmenu(false);
-      setParentMenuName("");
-      loadRequests();
+      setMessage("Demande de modification soumise avec succès ! Un email de notification a été envoyé.");
+      setFormData({
+        oldMenuName: "",
+        newMenuName: "",
+        isSubmenu: false,
+        parentMenuName: ""
+      });
+      setShowForm(false);
+      await loadData();
     } catch (error) {
-      setMessage("Erreur lors de la soumission de la demande");
+      setMessage("Erreur lors de la soumission de la demande.");
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -73,11 +90,11 @@ export default function MenusPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "approved":
-        return <CheckCircle className="h-5 w-5 text-green-600" />;
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
       case "rejected":
-        return <XCircle className="h-5 w-5 text-red-600" />;
+        return <XCircle className="h-4 w-4 text-red-600" />;
       default:
-        return <Clock className="h-5 w-5 text-orange-600" />;
+        return <Clock className="h-4 w-4 text-orange-600" />;
     }
   };
 
@@ -92,7 +109,9 @@ export default function MenusPage() {
     }
   };
 
-  if (loading || !user) {
+  // Removed unused getStatusColor function
+
+  if (loading || isLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p>Chargement...</p>
@@ -100,8 +119,12 @@ export default function MenusPage() {
     );
   }
 
+  // Removed unused mainMenus and submenus variables
+  // const mainMenus = menus.filter(m => !m.parent_id);
+  // const submenus = menus.filter(m => m.parent_id);
+
   return (
-    <Layout title="Gestion des Menus">
+    <Layout title="Gestion des menus">
       <div className="space-y-6">
         <div className="flex items-center gap-4 mb-4">
           <Button
@@ -114,78 +137,91 @@ export default function MenusPage() {
           </Button>
         </div>
 
-        <Card className="border-orange-200">
-          <CardHeader>
-            <CardTitle className="text-xl text-orange-800 flex items-center gap-2">
-              <Send className="h-5 w-5" />
-              Demander une modification de menu
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="oldMenu">Libellé actuel du menu/sous-menu</Label>
-                  <Input
-                    id="oldMenu"
-                    value={oldMenuName}
-                    onChange={(e) => setOldMenuName(e.target.value)}
-                    placeholder="Ex: À propos"
-                    required
-                  />
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Gestion des menus</h1>
+            <p className="text-gray-600">Gérez la structure des menus du site</p>
+          </div>
+          <Button onClick={() => setShowForm(!showForm)} className="bg-green-600 hover:bg-green-700">
+            <Plus className="mr-2 h-4 w-4" />
+            Demander une modification
+          </Button>
+        </div>
+
+        {showForm && (
+          <Card className="border-orange-200">
+            <CardHeader>
+              <CardTitle className="text-xl text-orange-800 flex items-center gap-2">
+                <Send className="h-5 w-5" />
+                Demander une modification de menu
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="oldMenu">Libellé actuel du menu/sous-menu</Label>
+                    <Input
+                      id="oldMenu"
+                      value={formData.oldMenuName}
+                      onChange={(e) => setFormData({ ...formData, oldMenuName: e.target.value })}
+                      placeholder="Ex: À propos"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="newMenu">Nouveau libellé souhaité</Label>
+                    <Input
+                      id="newMenu"
+                      value={formData.newMenuName}
+                      onChange={(e) => setFormData({ ...formData, newMenuName: e.target.value })}
+                      placeholder="Ex: Qui sommes-nous"
+                      required
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="newMenu">Nouveau libellé souhaité</Label>
-                  <Input
-                    id="newMenu"
-                    value={newMenuName}
-                    onChange={(e) => setNewMenuName(e.target.value)}
-                    placeholder="Ex: Qui sommes-nous"
-                    required
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isSubmenu"
+                    checked={formData.isSubmenu}
+                    onCheckedChange={(checked) => setFormData({ ...formData, isSubmenu: checked as boolean })}
                   />
+                  <Label htmlFor="isSubmenu">Il s'agit d'un sous-menu</Label>
                 </div>
-              </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="isSubmenu"
-                  checked={isSubmenu}
-                  onCheckedChange={(checked) => setIsSubmenu(checked as boolean)}
-                />
-                <Label htmlFor="isSubmenu">Il s'agit d'un sous-menu</Label>
-              </div>
+                {formData.isSubmenu && (
+                  <div className="space-y-2">
+                    <Label htmlFor="parentMenu">Menu parent</Label>
+                    <Input
+                      id="parentMenu"
+                      value={formData.parentMenuName}
+                      onChange={(e) => setFormData({ ...formData, parentMenuName: e.target.value })}
+                      placeholder="Ex: À propos"
+                      required
+                    />
+                  </div>
+                )}
 
-              {isSubmenu && (
-                <div className="space-y-2">
-                  <Label htmlFor="parentMenu">Menu parent</Label>
-                  <Input
-                    id="parentMenu"
-                    value={parentMenuName}
-                    onChange={(e) => setParentMenuName(e.target.value)}
-                    placeholder="Ex: À propos"
-                    required
-                  />
-                </div>
-              )}
+                {message && (
+                  <Alert className={message.includes("succès") ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
+                    <AlertDescription className={message.includes("succès") ? "text-green-800" : "text-red-800"}>
+                      {message}
+                    </AlertDescription>
+                  </Alert>
+                )}
 
-              {message && (
-                <Alert className={message.includes("succès") ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
-                  <AlertDescription className={message.includes("succès") ? "text-green-800" : "text-red-800"}>
-                    {message}
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-                className="w-full bg-orange-600 hover:bg-orange-700"
-              >
-                {isSubmitting ? "Envoi en cours..." : "Soumettre la demande"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="w-full bg-orange-600 hover:bg-orange-700"
+                >
+                  {isSubmitting ? "Envoi en cours..." : "Soumettre la demande"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="border-green-200">
           <CardHeader>

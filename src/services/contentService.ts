@@ -1,3 +1,5 @@
+
+import { supabase } from "@/integrations/supabase/client";
 import emailService, { ContentForEmail } from "./emailService";
 import { menuService } from "./menuService";
 
@@ -26,136 +28,140 @@ export interface ContentFormData {
   submenu_section_id?: string;
 }
 
-// Mock data pour l'application
-const mockContentSubmissions: ContentSubmission[] = [
-  {
-    id: "1",
-    title: "Article sur l'économie ivoirienne",
-    description: "Un article détaillé sur l'économie de la Côte d'Ivoire",
-    content_type: "text",
-    content_data: "L'économie ivoirienne connaît une croissance soutenue grâce aux réformes structurelles mises en place...",
-    file_urls: [],
-    menu_section_id: "menu-1",
-    submenu_section_id: undefined,
-    status: "pending",
-    created_by: "admin@cepec-ci.org",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  },
-  {
-    id: "2",
-    title: "Rapport annuel CAPEC 2024",
-    description: "Rapport complet des activités de l'année 2024",
-    content_type: "pdf",
-    content_data: "",
-    file_urls: ["https://example.com/rapport-capec-2024.pdf"],
-    menu_section_id: "menu-2",
-    submenu_section_id: undefined,
-    status: "approved",
-    created_by: "admin@cepec-ci.org",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  },
-  {
-    id: "3",
-    title: "Images de la conférence économique",
-    description: "Photos de la dernière conférence sur les politiques économiques",
-    content_type: "image",
-    content_data: "",
-    file_urls: ["https://example.com/conference1.jpg", "https://example.com/conference2.jpg"],
-    menu_section_id: "menu-3",
-    submenu_section_id: undefined,
-    status: "pending",
-    created_by: "admin@cepec-ci.org",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-];
-
 export const contentService = {
-  async getContentSubmissions() {
-    // Simulation d'un délai réseau
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return [...mockContentSubmissions];
-  },
-
-  async createContentSubmission(contentData: ContentFormData, userId: string) {
-    const newSubmission: ContentSubmission = {
-      id: Date.now().toString(),
-      title: contentData.title,
-      description: contentData.description,
-      content_type: contentData.content_type,
-      content_data: contentData.content_data,
-      file_urls: [],
-      menu_section_id: contentData.menu_section_id,
-      submenu_section_id: contentData.submenu_section_id,
-      created_by: userId,
-      status: "pending",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    // Simulation d'upload de fichiers
-    if (contentData.files && contentData.files.length > 0) {
-      newSubmission.file_urls = contentData.files.map(file => 
-        `https://mock-storage.capec-ci.com/${file.name}`
-      );
-    }
-
-    mockContentSubmissions.unshift(newSubmission);
-
-    // Envoyer par email automatiquement avec les noms des menus
+  async getContentSubmissions(): Promise<ContentSubmission[]> {
     try {
-      // Récupérer les noms des menus
-      const menus = await menuService.getMenuSections();
-      const menuName = newSubmission.menu_section_id ? 
-        menus.find(m => m.id === newSubmission.menu_section_id)?.name || "Menu inconnu" : 
-        "Non spécifié";
-      const submenuName = newSubmission.submenu_section_id ? 
-        menus.find(m => m.id === newSubmission.submenu_section_id)?.name || "Sous-menu inconnu" : 
-        "Non spécifié";
+      const { data, error } = await supabase
+        .from('content_submissions')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      const emailContent: ContentForEmail = {
-        type: newSubmission.content_type,
-        title: newSubmission.title,
-        description: newSubmission.description,
-        menu: menuName,
-        submenu: submenuName,
-        files: newSubmission.file_urls?.map(url => ({ 
-          name: url.split("/").pop() || "fichier", 
-          type: newSubmission.content_type,
-          url: url
-        }))
-      };
-      await emailService.sendContentSubmission(emailContent);
+      if (error) {
+        console.error('Erreur lors de la récupération des soumissions:', error);
+        throw error;
+      }
+
+      return data || [];
     } catch (error) {
-      console.error("Erreur lors de l'envoi de l'email:", error);
+      console.error('Erreur dans getContentSubmissions:', error);
+      return [];
     }
-
-    return newSubmission;
   },
 
-  async updateContentStatus(id: string, status: "approved" | "rejected") {
-    const submission = mockContentSubmissions.find(s => s.id === id);
-    if (submission) {
-      submission.status = status;
-      submission.updated_at = new Date().toISOString();
+  async createContentSubmission(contentData: ContentFormData, userId: string): Promise<ContentSubmission> {
+    try {
+      // Simuler l'upload de fichiers
+      let fileUrls: string[] = [];
+      if (contentData.files && contentData.files.length > 0) {
+        fileUrls = contentData.files.map(file => 
+          `https://storage.capec-ci.com/${Date.now()}-${file.name}`
+        );
+      }
+
+      const newSubmission = {
+        title: contentData.title,
+        description: contentData.description,
+        content_type: contentData.content_type,
+        content_data: contentData.content_data,
+        file_urls: fileUrls,
+        menu_section_id: contentData.menu_section_id,
+        submenu_section_id: contentData.submenu_section_id,
+        created_by: userId,
+        status: 'pending' as const
+      };
+
+      const { data, error } = await supabase
+        .from('content_submissions')
+        .insert([newSubmission])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erreur lors de la création de la soumission:', error);
+        throw error;
+      }
+
+      // Envoyer par email automatiquement avec les noms des menus
+      try {
+        const menus = await menuService.getMenuSections();
+        const menuName = data.menu_section_id ? 
+          menus.find(m => m.id === data.menu_section_id)?.name || "Menu inconnu" : 
+          "Non spécifié";
+        const submenuName = data.submenu_section_id ? 
+          menus.find(m => m.id === data.submenu_section_id)?.name || "Sous-menu inconnu" : 
+          "Non spécifié";
+
+        const emailContent: ContentForEmail = {
+          type: data.content_type,
+          title: data.title,
+          description: data.description,
+          menu: menuName,
+          submenu: submenuName,
+          files: data.file_urls?.map(url => ({ 
+            name: url.split("/").pop() || "fichier", 
+            type: data.content_type,
+            url: url
+          }))
+        };
+        await emailService.sendContentSubmission(emailContent);
+      } catch (emailError) {
+        console.error("Erreur lors de l'envoi de l'email:", emailError);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Erreur dans createContentSubmission:', error);
+      throw error;
     }
-    return submission;
   },
 
-  async deleteContentSubmission(id: string) {
-    const index = mockContentSubmissions.findIndex(s => s.id === id);
-    if (index > -1) {
-      mockContentSubmissions.splice(index, 1);
+  async updateContentStatus(id: string, status: "approved" | "rejected"): Promise<ContentSubmission | null> {
+    try {
+      const { data, error } = await supabase
+        .from('content_submissions')
+        .update({ 
+          status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erreur lors de la mise à jour du statut:', error);
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Erreur dans updateContentStatus:', error);
+      return null;
     }
-    return true;
+  },
+
+  async deleteContentSubmission(id: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('content_submissions')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Erreur lors de la suppression:', error);
+        throw error;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Erreur dans deleteContentSubmission:', error);
+      return false;
+    }
   },
 
   async sendAllContentToEmail() {
     try {
       const submissions = await this.getContentSubmissions();
-      const result = await emailService.sendAllContentData(submissions); // Corrected call
+      const result = await emailService.sendAllContentData(submissions);
       
       if (result.success) {
         return { 
