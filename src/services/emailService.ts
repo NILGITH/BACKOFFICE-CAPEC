@@ -60,7 +60,7 @@ export const emailService = {
 
   async sendContentSubmission(content: ContentForEmail): Promise<boolean> {
     const emailData = {
-      to: 'petronildaga@aitech-ci.com',
+      to: 'petronildaga@capec-ci.org',
       subject: 'Nouvelle soumission de contenu - CAPEC',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -110,7 +110,7 @@ export const emailService = {
 
   async sendMenuUpdate(oldMenu: string, newMenu: string, type: "menu" | "submenu"): Promise<boolean> {
     const emailData = {
-      to: 'petronildaga@aitech-ci.com',
+      to: 'petronildaga@capec-ci.org',
       subject: `Demande de modification ${type} - CAPEC`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -144,7 +144,7 @@ export const emailService = {
 
   async sendApprovalNotification(submission: SubmissionDetailsForEmail, status: "approved" | "rejected"): Promise<boolean> {
     const emailData = {
-      to: 'petronildaga@aitech-ci.com',
+      to: 'petronildaga@capec-ci.org',
       subject: `Soumission ${status === 'approved' ? 'approuvée' : 'rejetée'} - CAPEC`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -180,7 +180,7 @@ export const emailService = {
 
   async sendMenuChangeRequest(request: MenuChangeRequest, userId: string): Promise<boolean> {
     const emailData = {
-      to: "petronildaga@aitech-ci.com",
+      to: "petronildaga@capec-ci.org",
       subject: "Nouvelle demande de modification de menu - CAPEC",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -217,7 +217,7 @@ export const emailService = {
   async sendOverviewData(overviewData: OverviewEmailData): Promise<{ success: boolean; message?: string }> {
     const { menus, menuRequests, contentSubmissions, summary } = overviewData;
     const emailData = {
-      to: "petronildaga@aitech-ci.com",
+      to: "petronildaga@capec-ci.org",
       subject: "Vue d'ensemble complète des données CAPEC",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
@@ -254,7 +254,7 @@ export const emailService = {
 
   async sendAllContentData(submissions: ContentSubmission[]): Promise<{ success: boolean; message?: string }> {
     const emailData = {
-      to: "petronildaga@aitech-ci.com",
+      to: "petronildaga@capec-ci.org",
       subject: `Export de toutes les soumissions de contenu CAPEC (${submissions.length})`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
