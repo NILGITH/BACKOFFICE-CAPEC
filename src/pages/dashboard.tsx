@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Menu, Plus, Eye, Upload, Settings } from "lucide-react";
+import { Menu, Plus, Eye, Upload, Settings } from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardPage() {
@@ -82,15 +82,15 @@ export default function DashboardPage() {
             <CardHeader>
               <div className="flex items-center space-x-2">
                 <Eye className="h-5 w-5 text-orange-600" />
-                <CardTitle className="text-lg">Contenu Soumis</CardTitle>
+                <CardTitle className="text-lg">Vue d'ensemble</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="mb-4 text-gray-600">Revoyez et gérez le contenu en attente ou approuvé.</p>
-              <Link href="/content" passHref>
+              <p className="mb-4 text-gray-600">Consultez tous les éléments : menus, sous-menus et contenus.</p>
+              <Link href="/overview" passHref>
                 <Button className="w-full bg-orange-600 hover:bg-orange-700">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Voir le contenu
+                  <Eye className="mr-2 h-4 w-4" />
+                  Voir tout
                 </Button>
               </Link>
             </CardContent>

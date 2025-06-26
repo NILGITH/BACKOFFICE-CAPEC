@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Layout from "@/components/Layout";
@@ -11,10 +10,10 @@ import { contentService, ContentSubmission } from "@/services/contentService";
 import { menuService, MenuSection } from "@/services/menuService";
 import { 
   Eye, 
-  FileText, 
-  Image, 
-  Video, 
-  FileIcon, 
+  FileText as FileTextIcon, // Renamed to avoid conflict if FileText is used as component
+  Image as ImageIcon, // Renamed to avoid conflict
+  Video as VideoIcon, // Renamed to avoid conflict
+  FileIcon as FileIconLucide, // Renamed to avoid conflict
   CheckCircle, 
   Clock, 
   XCircle, 
@@ -64,15 +63,15 @@ export default function ContentPage() {
   const getContentTypeIcon = (type: string) => {
     switch (type) {
       case "text":
-        return <FileText className="h-5 w-5 text-blue-600" />;
+        return <FileTextIcon className="h-5 w-5 text-blue-600" />;
       case "image":
-        return <Image className="h-5 w-5 text-green-600" />;
+        return <ImageIcon className="h-5 w-5 text-green-600" />;
       case "video":
-        return <Video className="h-5 w-5 text-purple-600" />;
+        return <VideoIcon className="h-5 w-5 text-purple-600" />;
       case "pdf":
-        return <FileIcon className="h-5 w-5 text-red-600" />;
+        return <FileIconLucide className="h-5 w-5 text-red-600" />;
       default:
-        return <FileText className="h-5 w-5 text-gray-600" />;
+        return <FileTextIcon className="h-5 w-5 text-gray-600" />;
     }
   };
 
@@ -235,7 +234,7 @@ export default function ContentPage() {
           <CardContent>
             {submissions.length === 0 ? (
               <div className="text-center py-8">
-                <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <FileTextIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                 <p className="text-gray-600">Aucun contenu soumis pour le moment</p>
                 <Link href="/content/new">
                   <Button className="mt-4 bg-green-600 hover:bg-green-700">

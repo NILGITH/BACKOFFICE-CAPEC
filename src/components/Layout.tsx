@@ -26,7 +26,7 @@ export default function Layout({ children, title }: LayoutProps) {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <Image
-                src="/logo-capec-mcdb23oy.png"
+                src="/logo-capec-mcdawft9.png"
                 alt="Logo CAPEC"
                 width={40}
                 height={40}

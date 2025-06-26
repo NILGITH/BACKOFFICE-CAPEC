@@ -52,7 +52,7 @@ export default function LoginPage() {
           <CardHeader className="text-center space-y-4">
             <div className="flex justify-center">
               <Image
-                src="/logo-capec-mcdb23oy.png"
+                src="/logo-capec-mcdawft9.png"
                 alt="Logo CAPEC"
                 width={120}
                 height={120}

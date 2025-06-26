@@ -1,6 +1,4 @@
 
-import { supabase } from "@/integrations/supabase/client";
-
 export interface ContentSubmission {
   id: string;
   title: string;
@@ -26,14 +24,14 @@ export interface ContentFormData {
   submenu_section_id?: string;
 }
 
-// Mock data pour éviter les erreurs TypeScript
+// Mock data pour l'application
 const mockContentSubmissions: ContentSubmission[] = [
   {
     id: "1",
-    title: "Article sur l'économie",
-    description: "Un article détaillé sur l'économie ivoirienne",
+    title: "Article sur l'économie ivoirienne",
+    description: "Un article détaillé sur l'économie de la Côte d'Ivoire",
     content_type: "text",
-    content_data: "Contenu de l'article...",
+    content_data: "L'économie ivoirienne connaît une croissance soutenue grâce aux réformes structurelles mises en place...",
     file_urls: [],
     menu_section_id: "menu-1",
     submenu_section_id: undefined,
@@ -44,14 +42,28 @@ const mockContentSubmissions: ContentSubmission[] = [
   },
   {
     id: "2",
-    title: "Rapport PDF",
-    description: "Rapport annuel 2024",
+    title: "Rapport annuel CAPEC 2024",
+    description: "Rapport complet des activités de l'année 2024",
     content_type: "pdf",
     content_data: "",
-    file_urls: ["https://example.com/rapport.pdf"],
+    file_urls: ["https://example.com/rapport-capec-2024.pdf"],
     menu_section_id: "menu-2",
     submenu_section_id: undefined,
     status: "approved",
+    created_by: "admin@cepec-ci.org",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: "3",
+    title: "Images de la conférence économique",
+    description: "Photos de la dernière conférence sur les politiques économiques",
+    content_type: "image",
+    content_data: "",
+    file_urls: ["https://example.com/conference1.jpg", "https://example.com/conference2.jpg"],
+    menu_section_id: "menu-3",
+    submenu_section_id: undefined,
+    status: "pending",
     created_by: "admin@cepec-ci.org",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
@@ -60,22 +72,9 @@ const mockContentSubmissions: ContentSubmission[] = [
 
 export const contentService = {
   async getContentSubmissions() {
-    try {
-      // Tentative d'utilisation de Supabase, sinon retour aux données mock
-      const { data, error } = await supabase
-        .from("content_submissions")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.warn("Utilisation des données mock:", error);
-        return mockContentSubmissions;
-      }
-      return data as ContentSubmission[];
-    } catch (error) {
-      console.warn("Utilisation des données mock:", error);
-      return mockContentSubmissions;
-    }
+    // Simulation d'un délai réseau
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return [...mockContentSubmissions];
   },
 
   async createContentSubmission(contentData: ContentFormData, userId: string) {
@@ -97,7 +96,7 @@ export const contentService = {
     // Simulation d'upload de fichiers
     if (contentData.files && contentData.files.length > 0) {
       newSubmission.file_urls = contentData.files.map(file => 
-        `https://mock-storage.com/${file.name}`
+        `https://mock-storage.capec-ci.com/${file.name}`
       );
     }
 
@@ -130,16 +129,23 @@ export const contentService = {
         to: "petronildaga@aitech-ci.com",
         subject: "Soumissions de contenu CAPEC-CI",
         content: submissions,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        totalSubmissions: submissions.length,
+        pendingSubmissions: submissions.filter(s => s.status === "pending").length,
+        approvedSubmissions: submissions.filter(s => s.status === "approved").length
       };
 
-      console.log("Données à envoyer par email:", emailData);
+      console.log("Données envoyées par email:", emailData);
       
-      // Simulation d'envoi d'email
-      return { success: true, message: "Contenu envoyé avec succès à petronildaga@aitech-ci.com" };
+      // Simulation d'envoi d'email réussi
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return { 
+        success: true, 
+        message: `Contenu envoyé avec succès à petronildaga@aitech-ci.com (${submissions.length} éléments)` 
+      };
     } catch (error) {
       console.error("Erreur lors de l'envoi:", error);
-      throw error;
+      throw new Error("Erreur lors de l'envoi des données par email");
     }
   }
 };

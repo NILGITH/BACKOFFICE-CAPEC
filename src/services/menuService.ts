@@ -1,6 +1,4 @@
 
-import { supabase } from "@/integrations/supabase/client";
-
 export interface MenuSection {
   id: string;
   name: string;
@@ -22,7 +20,7 @@ export interface MenuChangeRequest {
   created_at: string;
 }
 
-// Mock data pour éviter les erreurs TypeScript
+// Mock data pour l'application
 const mockMenuSections: MenuSection[] = [
   {
     id: "menu-1",
@@ -52,11 +50,47 @@ const mockMenuSections: MenuSection[] = [
     created_at: new Date().toISOString()
   },
   {
+    id: "submenu-2",
+    name: "Notre équipe",
+    slug: "notre-equipe",
+    parent_id: "menu-2",
+    order_index: 2,
+    is_active: true,
+    created_at: new Date().toISOString()
+  },
+  {
     id: "menu-3",
     name: "Services",
     slug: "services",
     parent_id: undefined,
     order_index: 3,
+    is_active: true,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "submenu-3",
+    name: "Analyse économique",
+    slug: "analyse-economique",
+    parent_id: "menu-3",
+    order_index: 1,
+    is_active: true,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "menu-4",
+    name: "Publications",
+    slug: "publications",
+    parent_id: undefined,
+    order_index: 4,
+    is_active: true,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "menu-5",
+    name: "Contact",
+    slug: "contact",
+    parent_id: undefined,
+    order_index: 5,
     is_active: true,
     created_at: new Date().toISOString()
   }
@@ -72,26 +106,24 @@ const mockMenuChangeRequests: MenuChangeRequest[] = [
     status: "pending",
     created_by: "admin@cepec-ci.org",
     created_at: new Date().toISOString()
+  },
+  {
+    id: "req-2",
+    old_menu_name: "Notre équipe",
+    new_menu_name: "L'équipe CAPEC",
+    is_submenu: true,
+    parent_menu_name: "À propos",
+    status: "approved",
+    created_by: "admin@cepec-ci.org",
+    created_at: new Date(Date.now() - 86400000).toISOString()
   }
 ];
 
 export const menuService = {
   async getMenuSections() {
-    try {
-      const { data, error } = await supabase
-        .from("menu_sections")
-        .select("*")
-        .order("order_index", { ascending: true });
-
-      if (error) {
-        console.warn("Utilisation des données mock:", error);
-        return mockMenuSections;
-      }
-      return data as MenuSection[];
-    } catch (error) {
-      console.warn("Utilisation des données mock:", error);
-      return mockMenuSections;
-    }
+    // Simulation d'un délai réseau
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return [...mockMenuSections];
   },
 
   async getMenusWithSubmenus() {
@@ -123,7 +155,9 @@ export const menuService = {
   },
 
   async getMenuChangeRequests() {
-    return mockMenuChangeRequests;
+    // Simulation d'un délai réseau
+    await new Promise(resolve => setTimeout(resolve, 200));
+    return [...mockMenuChangeRequests];
   },
 
   async updateMenuChangeRequestStatus(id: string, status: "approved" | "rejected") {

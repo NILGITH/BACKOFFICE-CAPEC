@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Layout from "@/components/Layout";
@@ -12,7 +11,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { contentService, ContentFormData } from "@/services/contentService";
 import { menuService, MenuSection } from "@/services/menuService";
-import { Upload, FileText, Image, Video, FileIcon, Plus, X } from "lucide-react";
+import { 
+  Upload, 
+  FileText as FileTextIcon, // Renamed
+  Image as ImageIcon, // Renamed
+  Video as VideoIcon, // Renamed
+  FileIcon as FileIconLucide, // Renamed
+  Plus, 
+  X 
+} from "lucide-react";
 
 export default function NewContentPage() {
   const { user, loading } = useAuth();
@@ -112,15 +119,15 @@ export default function NewContentPage() {
   const getContentTypeIcon = (type: string) => {
     switch (type) {
       case "text":
-        return <FileText className="h-5 w-5" />;
+        return <FileTextIcon className="h-5 w-5" />;
       case "image":
-        return <Image className="h-5 w-5" />;
+        return <ImageIcon className="h-5 w-5" />;
       case "video":
-        return <Video className="h-5 w-5" />;
+        return <VideoIcon className="h-5 w-5" />;
       case "pdf":
-        return <FileIcon className="h-5 w-5" />;
+        return <FileIconLucide className="h-5 w-5" />;
       default:
-        return <FileText className="h-5 w-5" />;
+        return <FileTextIcon className="h-5 w-5" />;
     }
   };
 
@@ -166,25 +173,25 @@ export default function NewContentPage() {
                     <SelectContent>
                       <SelectItem value="text">
                         <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4" />
+                          <FileTextIcon className="h-4 w-4" />
                           Texte
                         </div>
                       </SelectItem>
                       <SelectItem value="image">
                         <div className="flex items-center gap-2">
-                          <Image className="h-4 w-4" />
+                          <ImageIcon className="h-4 w-4" />
                           Image
                         </div>
                       </SelectItem>
                       <SelectItem value="video">
                         <div className="flex items-center gap-2">
-                          <Video className="h-4 w-4" />
+                          <VideoIcon className="h-4 w-4" />
                           Vidéo
                         </div>
                       </SelectItem>
                       <SelectItem value="pdf">
                         <div className="flex items-center gap-2">
-                          <FileIcon className="h-4 w-4" />
+                          <FileIconLucide className="h-4 w-4" />
                           PDF
                         </div>
                       </SelectItem>
