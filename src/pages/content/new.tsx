@@ -22,8 +22,7 @@ import {
   X, 
   ArrowLeft,
   CheckCircle,
-  PlusCircle,
-  List
+  PlusCircle
 } from "lucide-react";
 
 export default function NewContentPage() {
