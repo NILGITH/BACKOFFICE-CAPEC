@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 interface User {
   id: string;
@@ -17,15 +17,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  loading: false,
+  loading: true, // Initialize loading to true
   login: async () => false,
   adminLogin: async () => false,
   logout: () => {}
 });
 
-export default function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Initialize loading to true
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setLoading(true);
@@ -72,6 +72,8 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    // Optionally redirect to login page after logout
+    // window.location.href = "/login"; 
   };
 
   useEffect(() => {
@@ -79,6 +81,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
+    setLoading(false); // Set loading to false after checking local storage
   }, []);
 
   return (
