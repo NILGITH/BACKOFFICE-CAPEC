@@ -4,7 +4,7 @@ import { MenuChangeRequest, MenuSection } from "./menuService";
 export interface EmailData {
   to: string;
   subject: string;
-  content: Record<string, unknown>; // Changed from any
+  content: Record<string, unknown>;
   timestamp: string;
   type: "content_submission" | "menu_change_request" | "overview_data" | "form_submission";
 }

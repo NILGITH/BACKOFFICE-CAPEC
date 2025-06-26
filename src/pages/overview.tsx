@@ -133,7 +133,8 @@ export default function OverviewPage() {
           totalContentSubmissions: submissions.length,
           pendingContentSubmissions: submissions.filter(s => s.status === "pending").length,
           approvedContentSubmissions: submissions.filter(s => s.status === "approved").length
-        }
+        },
+        submissionType: "Vue d'ensemble complète" // Added missing property
       };
 
       const result = await emailService.sendOverviewData(allData);
