@@ -67,14 +67,11 @@ export const emailService = {
       const filesList = content.files.map((file) => {
         let detail = `- ${file.name} (${file.type})`;
         if (file.url) {
-          detail += `
-  Télécharger: ${baseUrl}/api/download-file?fileUrl=${encodeURIComponent(file.url)}&fileName=${encodeURIComponent(file.name)}`;
+          detail += `\n  Télécharger: ${baseUrl}/api/download-file?fileUrl=${encodeURIComponent(file.url)}&fileName=${encodeURIComponent(file.name)}`;
         }
         return detail;
       });
-      filesDetailsText = "Fichiers joints:
-" + filesList.join("
-");
+      filesDetailsText = "Fichiers joints:\n" + filesList.join("\n");
     }
 
     const htmlBody = `
@@ -120,7 +117,7 @@ export const emailService = {
         </div>
       `;
 
-    const textBody = [
+    const textBodyLines = [
       "CAPEC - Nouvelle Soumission",
       "",
       `Type: ${content.type || "Contenu"}`,
@@ -134,8 +131,8 @@ export const emailService = {
       "",
       "Action requise: Cette soumission nécessite votre approbation.",
       "Connectez-vous au panel d'administration pour approuver ou rejeter cette soumission."
-    ].join("
-");
+    ];
+    const textBody = textBodyLines.join("\n");
 
     const emailData = {
       to: "petronildaga@capec-ci.org",
@@ -166,14 +163,15 @@ export const emailService = {
         </div>
       `;
 
-    const textBody = [
+    const textBodyLines = [
       `CAPEC - Modification ${type}`,
       "",
       `Type: ${type === "menu" ? "Menu" : "Sous-menu"}`,
       `Ancien libellé: ${oldMenu}`,
       `Nouveau libellé: ${newMenu}`,
       `Date: ${new Date().toLocaleString("fr-FR")}`
-    ].join("\n");
+    ];
+    const textBody = textBodyLines.join("\n");
 
     const emailData = {
       to: "petronildaga@capec-ci.org",
@@ -205,7 +203,7 @@ export const emailService = {
         </div>
       `;
 
-    const textBody = [
+    const textBodyLines = [
       `CAPEC - Soumission ${status === "approved" ? "Approuvée" : "Rejetée"}`,
       "",
       `ID: ${submission.id}`,
@@ -213,7 +211,8 @@ export const emailService = {
       `Type: ${submission.type || "N/A"}`,
       `Statut: ${status === "approved" ? "Approuvée" : "Rejetée"}`,
       `Date: ${new Date().toLocaleString("fr-FR")}`
-    ].join("\n");
+    ];
+    const textBody = textBodyLines.join("\n");
 
     const emailData = {
       to: "petronildaga@capec-ci.org",
@@ -314,13 +313,10 @@ export const emailService = {
         });
       }
 
-      return parts.join("
-");
+      return parts.join("\n");
     });
 
-    const contentSubmissionsText = contentSubmissionsTextParts.join("
-
-");
+    const contentSubmissionsText = contentSubmissionsTextParts.join("\n\n");
 
     const htmlBody = `
         <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
@@ -351,7 +347,7 @@ export const emailService = {
         </div>
       `;
 
-    const textBodyParts = [
+    const textBodyLines = [
       "CAPEC - Vue d'ensemble complète",
       "",
       "Résumé:",
@@ -364,22 +360,21 @@ export const emailService = {
     ];
 
     menus.forEach(m => {
-      textBodyParts.push(`- ${m.name} ${m.parent_id ? "(Sous-menu)" : "(Menu principal)"}`);
+      textBodyLines.push(`- ${m.name} ${m.parent_id ? "(Sous-menu)" : "(Menu principal)"}`);
     });
 
-    textBodyParts.push("");
-    textBodyParts.push(`Demandes de modification de menu (${menuRequests.length}):`);
+    textBodyLines.push("");
+    textBodyLines.push(`Demandes de modification de menu (${menuRequests.length}):`);
 
     menuRequests.forEach(r => {
-      textBodyParts.push(`- ${r.old_menu_name} -> ${r.new_menu_name} (Statut: ${r.status})`);
+      textBodyLines.push(`- ${r.old_menu_name} -> ${r.new_menu_name} (Statut: ${r.status})`);
     });
 
-    textBodyParts.push("");
-    textBodyParts.push(`Soumissions de contenu (${contentSubmissions.length}):`);
-    textBodyParts.push(contentSubmissionsText);
+    textBodyLines.push("");
+    textBodyLines.push(`Soumissions de contenu (${contentSubmissions.length}):`);
+    textBodyLines.push(contentSubmissionsText);
 
-    const textBody = textBodyParts.join("
-");
+    const textBody = textBodyLines.join("\n");
       
     const emailData = {
       to: "petronildaga@capec-ci.org",
@@ -422,7 +417,7 @@ export const emailService = {
       </div>
     `).join("");
 
-    const submissionsDetailsText = submissions.map(s => {
+    const submissionsDetailsTextLines = submissions.map(s => {
       const lines = [
         `Titre: ${s.title}`,
         `Type: ${s.content_type}`,
@@ -439,11 +434,9 @@ export const emailService = {
         });
       }
 
-      return lines.join("
-");
-    }).join("
-
-");
+      return lines.join("\n");
+    });
+    const submissionsDetailsText = submissionsDetailsTextLines.join("\n\n");
 
     const htmlBody = `
         <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
@@ -460,14 +453,14 @@ export const emailService = {
         </div>
       `;
 
-    const textBody = [
+    const textBodyLines = [
       "CAPEC - Export des Soumissions de Contenu",
       "",
       `Total Soumissions: ${submissions.length}`,
       "",
       submissionsDetailsText
-    ].join("
-");
+    ];
+    const textBody = textBodyLines.join("\n");
 
     const emailData = {
       to: "petronildaga@capec-ci.org",
