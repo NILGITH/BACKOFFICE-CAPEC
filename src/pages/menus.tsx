@@ -8,12 +8,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Menu, Plus, Edit, Trash2, CheckCircle, XCircle, ArrowLeft } from "lucide-react";
 import Layout from "@/components/Layout";
-import { useAuth } from "@/contexts/AuthContext";
 import { menuService, MenuSection, MenuChangeRequest } from "@/services/menuService";
 
 export default function MenusPage() {
   const router = useRouter();
-  const { user } = useAuth();
   const [menus, setMenus] = useState<MenuSection[]>([]);
   const [requests, setRequests] = useState<MenuChangeRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,12 +28,8 @@ export default function MenusPage() {
   });
 
   useEffect(() => {
-    if (!user) {
-      router.push("/login");
-      return;
-    }
     loadData();
-  }, [user, router]);
+  }, []);
 
   const loadData = async () => {
     try {
@@ -56,7 +50,6 @@ export default function MenusPage() {
 
   const handleAddMenuRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
 
     try {
       await menuService.createMenuChangeRequest({
@@ -64,7 +57,7 @@ export default function MenusPage() {
         new_menu_name: newMenuData.new_menu_name,
         is_submenu: newMenuData.is_submenu,
         parent_menu_name: newMenuData.is_submenu ? newMenuData.parent_menu_name : undefined
-      }, user.id);
+      }, "anonymous");
 
       setAlert({ type: "success", message: "Demande d'ajout envoyée avec succès !" });
       setShowAddDialog(false);
@@ -78,7 +71,7 @@ export default function MenusPage() {
 
   const handleEditMenuRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !selectedMenu) return;
+    if (!selectedMenu) return;
 
     try {
       await menuService.createMenuChangeRequest({
@@ -87,7 +80,7 @@ export default function MenusPage() {
         is_submenu: !!selectedMenu.parent_id,
         parent_menu_name: selectedMenu.parent_id ? 
           menus.find(m => m.id === selectedMenu.parent_id)?.name : undefined
-      }, user.id);
+      }, "anonymous");
 
       setAlert({ type: "success", message: "Demande de modification envoyée avec succès !" });
       setShowEditDialog(false);

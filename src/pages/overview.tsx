@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Layout from "@/components/Layout";
-import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +23,6 @@ import {
 } from "lucide-react";
 
 export default function OverviewPage() {
-  const { user, loading } = useAuth();
   const router = useRouter();
   const [submissions, setSubmissions] = useState<ContentSubmission[]>([]);
   const [menus, setMenus] = useState<MenuSection[]>([]);
@@ -34,16 +32,8 @@ export default function OverviewPage() {
   const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
-  }, [user, loading, router]);
-
-  useEffect(() => {
-    if (user) {
-      loadData();
-    }
-  }, [user]);
+    loadData();
+  }, []);
 
   const loadData = async () => {
     try {
@@ -152,7 +142,7 @@ export default function OverviewPage() {
     }
   };
 
-  if (loading || isLoading || !user) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p>Chargement...</p>

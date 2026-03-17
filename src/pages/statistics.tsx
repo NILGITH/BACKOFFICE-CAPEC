@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Layout from "@/components/Layout";
-import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,22 +21,13 @@ import {
 } from "lucide-react";
 
 export default function StatisticsPage() {
-  const { user, loading } = useAuth();
   const router = useRouter();
   const [stats, setStats] = useState<StatisticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
-  }, [user, loading, router]);
-
-  useEffect(() => {
-    if (user) {
-      loadStatistics();
-    }
-  }, [user]);
+    loadStatistics();
+  }, []);
 
   const loadStatistics = async () => {
     try {
@@ -113,16 +103,12 @@ export default function StatisticsPage() {
     }
   };
 
-  if (loading || isLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p>Chargement des statistiques...</p>
       </div>
     );
-  }
-
-  if (!user) {
-    return null;
   }
 
   if (!stats) {

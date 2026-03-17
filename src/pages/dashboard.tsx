@@ -1,229 +1,134 @@
-import { useEffect } from "react";
-import { useRouter } from "next/router";
 import Layout from "@/components/Layout";
-import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { FileText, Menu, BarChart3, Users } from "lucide-react";
 import Link from "next/link";
-import { 
-  FileText, 
-  Menu, 
-  BarChart3, 
-  Eye, 
-  Settings,
-  Upload,
-  CheckSquare,
-  Users
-} from "lucide-react";
 
 export default function Dashboard() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
-  }, [user, loading, router]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Chargement...</p>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null;
-  }
-
   return (
-    <Layout title="Tableau de bord">
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Tableau de bord CAPEC</h1>
-          <p className="text-gray-600 mt-2">
-            Bienvenue sur la plateforme de gestion de contenu du site CAPEC-CI
+    <Layout>
+      <div className="container mx-auto py-8 px-4">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Tableau de bord CAPEC
+          </h1>
+          <p className="text-gray-600">
+            Collecte de données pour le site capec-ci.org
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Soumission de contenu */}
-          <Card className="hover:shadow-lg transition-shadow border-orange-200">
-            <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100">
-              <CardTitle className="flex items-center gap-2 text-orange-800">
-                <Upload className="h-5 w-5" />
-                Soumettre du contenu
-              </CardTitle>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Soumettre du contenu */}
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <FileText className="h-10 w-10 text-orange-500 mb-2" />
+              <CardTitle>Soumettre du contenu</CardTitle>
               <CardDescription>
-                Ajouter des articles, images, vidéos ou documents PDF
+                Ajoutez des images, vidéos, textes ou PDF
               </CardDescription>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent>
               <Link href="/content/new">
-                <Button className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
-                  Créer une soumission
+                <Button className="w-full bg-orange-500 hover:bg-orange-600">
+                  Nouveau contenu
                 </Button>
               </Link>
             </CardContent>
           </Card>
 
-          {/* Historique des contenus */}
-          <Card className="hover:shadow-lg transition-shadow border-blue-200">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100">
-              <CardTitle className="flex items-center gap-2 text-blue-800">
-                <FileText className="h-5 w-5" />
-                Mes contenus
-              </CardTitle>
+          {/* Gérer les menus */}
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <Menu className="h-10 w-10 text-blue-500 mb-2" />
+              <CardTitle>Gérer les menus</CardTitle>
               <CardDescription>
-                Consulter l'historique de vos soumissions
+                Demander des modifications de menus
               </CardDescription>
             </CardHeader>
-            <CardContent className="pt-6">
-              <Link href="/content">
-                <Button variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50">
-                  Voir mes contenus
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Gestion des menus */}
-          <Card className="hover:shadow-lg transition-shadow border-green-200">
-            <CardHeader className="bg-gradient-to-r from-green-50 to-green-100">
-              <CardTitle className="flex items-center gap-2 text-green-800">
-                <Menu className="h-5 w-5" />
-                Gestion des menus
-              </CardTitle>
-              <CardDescription>
-                Demander des modifications de menus et sous-menus
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent>
               <Link href="/menus">
-                <Button variant="outline" className="w-full border-green-300 text-green-700 hover:bg-green-50">
-                  Gérer les menus
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Vue d'ensemble */}
-          <Card className="hover:shadow-lg transition-shadow border-purple-200">
-            <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100">
-              <CardTitle className="flex items-center gap-2 text-purple-800">
-                <Eye className="h-5 w-5" />
-                Vue d'ensemble
-              </CardTitle>
-              <CardDescription>
-                Aperçu complet des menus et contenus
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <Link href="/overview">
-                <Button variant="outline" className="w-full border-purple-300 text-purple-700 hover:bg-purple-50">
-                  Voir l'aperçu
+                <Button className="w-full bg-blue-500 hover:bg-blue-600">
+                  Voir les menus
                 </Button>
               </Link>
             </CardContent>
           </Card>
 
           {/* Statistiques */}
-          <Card className="hover:shadow-lg transition-shadow border-indigo-200">
-            <CardHeader className="bg-gradient-to-r from-indigo-50 to-indigo-100">
-              <CardTitle className="flex items-center gap-2 text-indigo-800">
-                <BarChart3 className="h-5 w-5" />
-                Statistiques
-              </CardTitle>
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <BarChart3 className="h-10 w-10 text-green-500 mb-2" />
+              <CardTitle>Statistiques</CardTitle>
               <CardDescription>
-                Analyse détaillée de l'activité
+                Visualisez les données collectées
               </CardDescription>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent>
               <Link href="/statistics">
-                <Button variant="outline" className="w-full border-indigo-300 text-indigo-700 hover:bg-indigo-50">
-                  Voir les stats
+                <Button className="w-full bg-green-500 hover:bg-green-600">
+                  Voir statistiques
                 </Button>
               </Link>
             </CardContent>
           </Card>
 
-          {/* Administration (si admin) */}
-          <Card className="hover:shadow-lg transition-shadow border-red-200">
-            <CardHeader className="bg-gradient-to-r from-red-50 to-red-100">
-              <CardTitle className="flex items-center gap-2 text-red-800">
-                <CheckSquare className="h-5 w-5" />
-                Administration
-              </CardTitle>
+          {/* Vue d'ensemble */}
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <Users className="h-10 w-10 text-purple-500 mb-2" />
+              <CardTitle>Vue d'ensemble</CardTitle>
               <CardDescription>
-                Approuver les soumissions et gérer les utilisateurs
+                Aperçu global des données
               </CardDescription>
             </CardHeader>
-            <CardContent className="pt-6">
-              <Link href="/admin/login">
-                <Button variant="outline" className="w-full border-red-300 text-red-700 hover:bg-red-50">
-                  Espace Admin
+            <CardContent>
+              <Link href="/overview">
+                <Button className="w-full bg-purple-500 hover:bg-purple-600">
+                  Vue d'ensemble
                 </Button>
               </Link>
             </CardContent>
           </Card>
         </div>
 
-        {/* Instructions rapides */}
-        <Card className="border-gray-200">
+        {/* Section informative */}
+        <Card className="mt-8">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Guide rapide
-            </CardTitle>
+            <CardTitle>Bienvenue sur l'application de collecte CAPEC</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-700 font-bold">
-                  1
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">Soumettre du contenu</h4>
+              <p className="text-gray-600">
+                Cette application vous permet de collecter et soumettre facilement des données 
+                pour mettre à jour le site web capec-ci.org.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div className="p-4 bg-orange-50 rounded-lg">
+                  <h3 className="font-semibold text-orange-900 mb-2">📝 Contenu</h3>
                   <p className="text-sm text-gray-600">
-                    Cliquez sur "Soumettre du contenu" pour ajouter des articles, images, vidéos ou documents PDF au site CAPEC.
+                    Soumettez des images, vidéos, fichiers PDF ou du texte pour enrichir le site.
                   </p>
                 </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold">
-                  2
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">Demander une modification de menu</h4>
+                
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <h3 className="font-semibold text-blue-900 mb-2">🗂️ Menus</h3>
                   <p className="text-sm text-gray-600">
-                    Allez dans "Gestion des menus" pour proposer l'ajout ou la modification de menus et sous-menus.
+                    Proposez des modifications ou ajouts aux menus et sous-menus du site.
                   </p>
                 </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold">
-                  3
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">Suivre l'état de vos soumissions</h4>
+                
+                <div className="p-4 bg-green-50 rounded-lg">
+                  <h3 className="font-semibold text-green-900 mb-2">📊 Statistiques</h3>
                   <p className="text-sm text-gray-600">
-                    Consultez "Mes contenus" pour voir le statut de vos soumissions (en attente, approuvé, rejeté).
+                    Consultez les analyses et tendances des données collectées.
                   </p>
                 </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-700 font-bold">
-                  4
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">Administration</h4>
+                
+                <div className="p-4 bg-purple-50 rounded-lg">
+                  <h3 className="font-semibold text-purple-900 mb-2">👁️ Vue d'ensemble</h3>
                   <p className="text-sm text-gray-600">
-                    Les administrateurs peuvent accéder à l'espace admin pour approuver ou rejeter les soumissions.
+                    Accédez à une vision globale de toutes les soumissions.
                   </p>
                 </div>
               </div>

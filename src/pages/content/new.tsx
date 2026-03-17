@@ -1,405 +1,400 @@
 import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
+import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Upload, ArrowLeft, CheckCircle, Plus, List, X } from "lucide-react";
-import Layout from "@/components/Layout";
-import { useAuth } from "@/contexts/AuthContext";
-import contentService, { ContentFormData } from "@/services/contentService";
+import { toast } from "@/hooks/use-toast";
+import { Upload, FileText, Image as ImageIcon, Video, FileUp, X, Eye } from "lucide-react";
+import { contentService } from "@/services/contentService";
 import { menuService, MenuSection } from "@/services/menuService";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-export default function NewContentPage() {
-  const router = useRouter();
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [menus, setMenus] = useState<MenuSection[]>([]);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [alert, setAlert] = useState<{ type: "success" | "error"; message: string } | null>(null);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-
-  const [formData, setFormData] = useState<ContentFormData>({
-    title: "",
-    description: "",
-    content_type: "text",
-    content_data: "",
-    menu_section_id: "",
-    submenu_section_id: ""
-  });
+export default function NewContent() {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [contentType, setContentType] = useState<"text" | "image" | "video" | "pdf">("text");
+  const [contentData, setContentData] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [menuSections, setMenuSections] = useState<MenuSection[]>([]);
+  const [selectedMenuId, setSelectedMenuId] = useState<string>("");
+  const [selectedSubmenuId, setSelectedSubmenuId] = useState<string>("");
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewContent, setPreviewContent] = useState<{ type: string; url: string } | null>(null);
 
   useEffect(() => {
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-    loadMenus();
-  }, [user, router]);
+    loadMenuSections();
+  }, []);
 
-  const loadMenus = async () => {
+  const loadMenuSections = async () => {
     try {
-      const menuData = await menuService.getMenuSections();
-      setMenus(menuData);
+      const sections = await menuService.getMenuSections();
+      setMenuSections(sections);
     } catch (error) {
       console.error("Erreur lors du chargement des menus:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de charger les menus"
+      });
     }
   };
+
+  const mainMenus = menuSections.filter(section => !section.parent_id);
+  const submenus = selectedMenuId 
+    ? menuSections.filter(section => section.parent_id === selectedMenuId)
+    : [];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      setSelectedFiles(prev => [...prev, ...newFiles]);
+      setFiles(prev => [...prev, ...newFiles]);
     }
   };
 
   const removeFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handlePreview = (file: File) => {
+    const url = URL.createObjectURL(file);
+    const type = file.type.startsWith("image/") ? "image" : 
+                 file.type.startsWith("video/") ? "video" : "pdf";
+    setPreviewContent({ type, url });
+    setPreviewOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    
+    if (!title.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Le titre est requis"
+      });
+      return;
+    }
 
-    setLoading(true);
-    setAlert(null);
+    if (!selectedMenuId) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Veuillez sélectionner un menu"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
-      const submissionData: ContentFormData = {
-        ...formData,
-        files: selectedFiles.length > 0 ? selectedFiles : undefined
-      };
+      await contentService.createContentSubmission({
+        title: title.trim(),
+        description: description.trim(),
+        content_type: contentType,
+        content_data: contentData.trim(),
+        files,
+        menu_section_id: selectedMenuId,
+        submenu_section_id: selectedSubmenuId || undefined
+      }, "anonymous");
 
-      await contentService.createContentSubmission(submissionData, user.id);
-      
-      setAlert({
-        type: "success",
-        message: "Contenu soumis avec succès ! Un email de notification a été envoyé."
+      toast({
+        title: "Succès",
+        description: "Contenu soumis avec succès"
       });
 
-      setShowSuccessModal(true);
+      // Réinitialiser le formulaire
+      setTitle("");
+      setDescription("");
+      setContentData("");
+      setFiles([]);
+      setSelectedMenuId("");
+      setSelectedSubmenuId("");
+      setContentType("text");
 
     } catch (error) {
       console.error("Erreur lors de la soumission:", error);
-      setAlert({
-        type: "error",
-        message: error instanceof Error ? error.message : "Erreur lors de la soumission du contenu"
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Échec de la soumission du contenu"
       });
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleAddAnother = () => {
-    setFormData({
-      title: "",
-      description: "",
-      content_type: "text",
-      content_data: "",
-      menu_section_id: "",
-      submenu_section_id: ""
-    });
-    setSelectedFiles([]);
-    setAlert(null);
-    setShowSuccessModal(false);
-  };
-
-  const handleFinish = () => {
-    router.push("/content");
-  };
-
-  const mainMenus = menus.filter(menu => !menu.parent_id);
-  const submenus = menus.filter(menu => menu.parent_id === formData.menu_section_id);
-
   return (
-    <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-green-50 p-4">
-        <div className="max-w-3xl mx-auto">
-          <div className="flex items-center gap-4 mb-6">
-            <Button
-              variant="outline"
-              onClick={() => router.back()}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Retour
-            </Button>
-            <h1 className="text-3xl font-bold text-gray-800">Nouveau Contenu</h1>
-          </div>
+    <Layout title="Soumettre du contenu">
+      <div className="container mx-auto py-8 px-4">
+        <Card className="max-w-3xl mx-auto">
+          <CardHeader>
+            <CardTitle className="text-2xl">Soumettre du nouveau contenu</CardTitle>
+            <CardDescription>
+              Ajoutez des images, vidéos, documents PDF ou du texte pour le site CAPEC
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Titre */}
+              <div className="space-y-2">
+                <Label htmlFor="title">Titre *</Label>
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Titre du contenu"
+                  required
+                />
+              </div>
 
-          <Card className="shadow-lg">
-            <CardHeader className="bg-gradient-to-r from-orange-500 to-green-600 text-white">
-              <CardTitle className="flex items-center gap-2">
-                <Upload className="h-5 w-5" />
-                Formulaire de Soumission de Contenu
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              {alert && (
-                <Alert className={`mb-6 ${alert.type === "success" ? "border-green-500 bg-green-50" : "border-red-500 bg-red-50"}`}>
-                  <AlertDescription className={alert.type === "success" ? "text-green-700" : "text-red-700"}>
-                    {alert.message}
-                  </AlertDescription>
-                </Alert>
-              )}
+              {/* Description */}
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Description du contenu..."
+                  rows={3}
+                />
+              </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    Titre du contenu <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Ex: Rapport économique trimestriel Q1 2024"
-                    required
-                    className="border-gray-300 focus:border-orange-500"
-                  />
-                </div>
+              {/* Menu principal */}
+              <div className="space-y-2">
+                <Label htmlFor="menu">Menu principal *</Label>
+                <Select value={selectedMenuId} onValueChange={setSelectedMenuId}>
+                  <SelectTrigger id="menu">
+                    <SelectValue placeholder="Sélectionnez un menu" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mainMenus.map((menu) => (
+                      <SelectItem key={menu.id} value={menu.id}>
+                        {menu.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    Type de contenu <span className="text-red-500">*</span>
-                  </label>
-                  <Select
-                    value={formData.content_type}
-                    onValueChange={(value: "text" | "image" | "video" | "pdf") =>
-                      setFormData({ ...formData, content_type: value })
-                    }
-                  >
-                    <SelectTrigger className="border-gray-300 focus:border-orange-500">
-                      <SelectValue />
+              {/* Sous-menu */}
+              {submenus.length > 0 && (
+                <div className="space-y-2">
+                  <Label htmlFor="submenu">Sous-menu (optionnel)</Label>
+                  <Select value={selectedSubmenuId} onValueChange={setSelectedSubmenuId}>
+                    <SelectTrigger id="submenu">
+                      <SelectValue placeholder="Sélectionnez un sous-menu" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="text">📝 Texte</SelectItem>
-                      <SelectItem value="image">🖼️ Image</SelectItem>
-                      <SelectItem value="video">🎥 Vidéo</SelectItem>
-                      <SelectItem value="pdf">📄 PDF</SelectItem>
+                      <SelectItem value="">Aucun</SelectItem>
+                      {submenus.map((submenu) => (
+                        <SelectItem key={submenu.id} value={submenu.id}>
+                          {submenu.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Sélectionnez le type de contenu principal que vous souhaitez soumettre
-                  </p>
                 </div>
+              )}
 
-                <div>
-                  <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    Description
-                  </label>
+              {/* Type de contenu */}
+              <div className="space-y-2">
+                <Label>Type de contenu</Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <Button
+                    type="button"
+                    variant={contentType === "text" ? "default" : "outline"}
+                    onClick={() => setContentType("text")}
+                    className="flex flex-col items-center py-6"
+                  >
+                    <FileText className="h-6 w-6 mb-2" />
+                    <span>Texte</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={contentType === "image" ? "default" : "outline"}
+                    onClick={() => setContentType("image")}
+                    className="flex flex-col items-center py-6"
+                  >
+                    <ImageIcon className="h-6 w-6 mb-2" />
+                    <span>Image</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={contentType === "video" ? "default" : "outline"}
+                    onClick={() => setContentType("video")}
+                    className="flex flex-col items-center py-6"
+                  >
+                    <Video className="h-6 w-6 mb-2" />
+                    <span>Vidéo</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={contentType === "pdf" ? "default" : "outline"}
+                    onClick={() => setContentType("pdf")}
+                    className="flex flex-col items-center py-6"
+                  >
+                    <FileUp className="h-6 w-6 mb-2" />
+                    <span>PDF</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Contenu texte */}
+              {contentType === "text" && (
+                <div className="space-y-2">
+                  <Label htmlFor="content">Contenu texte</Label>
                   <Textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Décrivez brièvement le contenu que vous soumettez..."
-                    rows={3}
-                    className="border-gray-300 focus:border-orange-500"
+                    id="content"
+                    value={contentData}
+                    onChange={(e) => setContentData(e.target.value)}
+                    placeholder="Saisissez votre contenu ici..."
+                    rows={8}
                   />
                 </div>
+              )}
 
-                {formData.content_type === "text" && (
-                  <div>
-                    <label className="block text-sm font-semibold mb-2 text-gray-700">
-                      Contenu textuel <span className="text-red-500">*</span>
-                    </label>
-                    <Textarea
-                      value={formData.content_data}
-                      onChange={(e) => setFormData({ ...formData, content_data: e.target.value })}
-                      placeholder="Saisissez votre contenu ici..."
-                      rows={8}
-                      required
-                      className="border-gray-300 focus:border-orange-500 font-mono text-sm"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Pour du contenu texte, saisissez directement le texte ci-dessus
-                    </p>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold mb-2 text-gray-700">
-                      Menu principal
-                    </label>
-                    <Select
-                      value={formData.menu_section_id}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, menu_section_id: value, submenu_section_id: "" })
-                      }
-                    >
-                      <SelectTrigger className="border-gray-300 focus:border-orange-500">
-                        <SelectValue placeholder="Sélectionner un menu" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mainMenus.map((menu) => (
-                          <SelectItem key={menu.id} value={menu.id}>
-                            {menu.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {submenus.length > 0 && (
-                    <div>
-                      <label className="block text-sm font-semibold mb-2 text-gray-700">
-                        Sous-menu
-                      </label>
-                      <Select
-                        value={formData.submenu_section_id}
-                        onValueChange={(value) => setFormData({ ...formData, submenu_section_id: value })}
-                      >
-                        <SelectTrigger className="border-gray-300 focus:border-orange-500">
-                          <SelectValue placeholder="Sélectionner un sous-menu" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {submenus.map((submenu) => (
-                            <SelectItem key={submenu.id} value={submenu.id}>
-                              {submenu.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    Fichiers à télécharger
-                  </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-orange-400 transition-colors">
-                    <Upload className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                    <p className="text-sm text-gray-600 mb-2 font-medium">
-                      Glissez-déposez vos fichiers ici
-                    </p>
-                    <p className="text-xs text-gray-500 mb-4">
-                      ou cliquez sur le bouton ci-dessous
-                    </p>
+              {/* Upload de fichiers */}
+              {contentType !== "text" && (
+                <div className="space-y-4">
+                  <Label htmlFor="files">
+                    Fichiers {contentType === "image" ? "images" : contentType === "video" ? "vidéos" : "PDF"}
+                  </Label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-orange-500 transition">
                     <input
+                      id="files"
                       type="file"
                       multiple
+                      accept={
+                        contentType === "image" ? "image/*" :
+                        contentType === "video" ? "video/*" :
+                        "application/pdf"
+                      }
                       onChange={handleFileChange}
                       className="hidden"
-                      id="file-upload"
-                      accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx"
                     />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => document.getElementById("file-upload")?.click()}
-                      className="border-orange-500 text-orange-600 hover:bg-orange-50"
-                    >
-                      Sélectionner des fichiers
-                    </Button>
-                    <p className="text-xs text-gray-500 mt-3">
-                      Formats acceptés: Images, Vidéos, PDF, Documents Word, Excel
-                    </p>
+                    <label htmlFor="files" className="cursor-pointer">
+                      <Upload className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+                      <p className="text-gray-600">
+                        Cliquez pour sélectionner ou glissez vos fichiers ici
+                      </p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {contentType === "image" && "Formats supportés: JPG, PNG, GIF, WEBP"}
+                        {contentType === "video" && "Formats supportés: MP4, MOV, AVI, WEBM"}
+                        {contentType === "pdf" && "Format supporté: PDF"}
+                      </p>
+                    </label>
                   </div>
 
-                  {selectedFiles.length > 0 && (
-                    <div className="mt-4 space-y-2">
-                      <p className="text-sm font-semibold text-gray-700">
-                        Fichiers sélectionnés ({selectedFiles.length})
-                      </p>
+                  {/* Liste des fichiers */}
+                  {files.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Fichiers sélectionnés ({files.length})</Label>
                       <div className="space-y-2">
-                        {selectedFiles.map((file, index) => (
+                        {files.map((file, index) => (
                           <div
                             key={index}
                             className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
                           >
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 bg-orange-100 rounded flex items-center justify-center">
-                                <Upload className="h-5 w-5 text-orange-600" />
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-gray-800">{file.name}</p>
+                            <div className="flex items-center space-x-3 flex-1">
+                              {contentType === "image" && <ImageIcon className="h-5 w-5 text-blue-500" />}
+                              {contentType === "video" && <Video className="h-5 w-5 text-purple-500" />}
+                              {contentType === "pdf" && <FileUp className="h-5 w-5 text-red-500" />}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">
+                                  {file.name}
+                                </p>
                                 <p className="text-xs text-gray-500">
                                   {(file.size / 1024 / 1024).toFixed(2)} MB
                                 </p>
                               </div>
                             </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeFile(index)}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handlePreview(file)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeFile(index)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
                 </div>
+              )}
 
-                <div className="flex gap-4 pt-6 border-t">
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className="flex-1 bg-gradient-to-r from-orange-500 to-green-600 hover:from-orange-600 hover:to-green-700 text-white font-semibold py-6"
-                  >
-                    {loading ? (
-                      <>
-                        <span className="animate-spin mr-2">⏳</span>
-                        Soumission en cours...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Soumettre le contenu
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => router.back()}
-                    className="px-8"
-                  >
-                    Annuler
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+              {/* Boutons d'action */}
+              <div className="flex justify-end space-x-4 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setTitle("");
+                    setDescription("");
+                    setContentData("");
+                    setFiles([]);
+                    setSelectedMenuId("");
+                    setSelectedSubmenuId("");
+                  }}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="bg-orange-500 hover:bg-orange-600"
+                >
+                  {isSubmitting ? "Envoi en cours..." : "Soumettre le contenu"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       </div>
 
-      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
-        <DialogContent className="sm:max-w-md">
+      {/* Dialogue de prévisualisation */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-green-600">
-              <CheckCircle className="h-6 w-6" />
-              Contenu soumis avec succès !
-            </DialogTitle>
+            <DialogTitle>Prévisualisation</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <p className="text-gray-600 mb-4">
-              Votre contenu a été soumis avec succès et un email de notification a été envoyé à l'administrateur.
-            </p>
-            <p className="text-sm text-gray-500 mb-6">
-              Que souhaitez-vous faire maintenant ?
-            </p>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={handleAddAnother}
-                className="flex items-center gap-2 flex-1"
-              >
-                <Plus className="h-4 w-4" />
-                Ajouter un autre
-              </Button>
-              <Button
-                onClick={handleFinish}
-                className="flex items-center gap-2 flex-1 bg-green-600 hover:bg-green-700"
-              >
-                <List className="h-4 w-4" />
-                Voir mes contenus
-              </Button>
-            </div>
+          <div className="mt-4">
+            {previewContent?.type === "image" && (
+              <img 
+                src={previewContent.url} 
+                alt="Preview" 
+                className="w-full h-auto rounded-lg"
+              />
+            )}
+            {previewContent?.type === "video" && (
+              <video 
+                src={previewContent.url} 
+                controls 
+                className="w-full h-auto rounded-lg"
+              />
+            )}
+            {previewContent?.type === "pdf" && (
+              <iframe 
+                src={previewContent.url} 
+                className="w-full h-[600px] rounded-lg"
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>
