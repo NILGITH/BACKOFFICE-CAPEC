@@ -85,13 +85,13 @@ export const menuService = {
       // Envoyer par email automatiquement
       if (data) { // Add null check for data
         try {
-          await emailService.sendMenuChangeRequest(data, userId);
+          await emailService.sendMenuChangeRequest(data as unknown as MenuChangeRequest, userId);
         } catch (emailError) {
           console.error("Erreur lors de l'envoi de l'email:", emailError);
         }
       }
 
-      return data as MenuChangeRequest; // data could be null
+      return data as unknown as MenuChangeRequest; // data could be null
     } catch (error) {
       console.error('Erreur dans createMenuChangeRequest:', error);
       throw error;
@@ -110,7 +110,7 @@ export const menuService = {
         throw error;
       }
 
-      return data || [];
+      return (data as unknown as MenuChangeRequest[]) || [];
     } catch (error) {
       console.error('Erreur dans getMenuChangeRequests:', error);
       return [];
@@ -132,7 +132,7 @@ export const menuService = {
         throw error;
       }
 
-      return data;
+      return data as unknown as MenuChangeRequest;
     } catch (error) {
       console.error('Erreur dans updateMenuChangeRequestStatus:', error);
       return null;

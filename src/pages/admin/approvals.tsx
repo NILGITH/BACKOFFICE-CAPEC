@@ -48,7 +48,7 @@ export default function ApprovalsPage() {
     setLoginError("");
     setPageIsLoading(true); // Indiquer le chargement pendant la tentative de connexion
 
-    if (email === "admin@capec-ci.org" && password === "admin2024") {
+    if (email === "admin@capec-ci.org" && password === "CapecAdmin2024!") {
       setIsAuthenticated(true);
       localStorage.setItem("admin_session", "authenticated");
       await loadData(); // Charger les données après une connexion réussie
@@ -404,7 +404,7 @@ export default function ApprovalsPage() {
                             {request.parent_menu_name && (
                               <span>Menu parent: {request.parent_menu_name}</span>
                             )}
-                            <span>Par: {request.created_by}</span>
+                            <span>Par: {request.requested_by}</span>
                             <span>Le: {new Date(request.created_at).toLocaleDateString("fr-FR")}</span>
                           </div>
                         </div>
