@@ -1,7 +1,8 @@
 import { ReactNode } from "react";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
+import { SEO } from "./SEO";
+import { Button } from "./ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { 
   DropdownMenu, 
@@ -10,6 +11,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface LayoutProps {
   children: ReactNode;
@@ -17,7 +19,19 @@ interface LayoutProps {
 }
 
 export default function Layout({ children, title }: LayoutProps) {
-  const { user, logout } = useAuth();
+  const router = useRouter();
+  const { user, signOut } = useAuth();
+  
+  const handleLogout = async () => {
+    await signOut();
+    router.push("/login");
+  };
+
+  // Safe way to get user display name
+  const getDisplayName = () => {
+    if (!user) return "";
+    return user.user_metadata?.full_name || user.email || "Utilisateur";
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-green-50/30">
@@ -51,7 +65,7 @@ export default function Layout({ children, title }: LayoutProps) {
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-orange-50">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-gradient-to-r from-orange-500 to-green-500 text-white">
-                        {user?.name?.charAt(0) || "U"}
+                        {getDisplayName().charAt(0).toUpperCase() || "U"}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -59,13 +73,13 @@ export default function Layout({ children, title }: LayoutProps) {
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium">{user?.name}</p>
+                      <p className="font-medium">{getDisplayName()}</p>
                       <p className="w-[200px] truncate text-sm text-muted-foreground">
                         {user?.email}
                       </p>
                     </div>
                   </div>
-                  <DropdownMenuItem onClick={logout} className="text-red-600 focus:text-red-600">
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Se déconnecter</span>
                   </DropdownMenuItem>
