@@ -8,20 +8,20 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { contentService, ContentSubmission } from "@/services/contentService";
 import { menuService, MenuSection, MenuChangeRequest } from "@/services/menuService";
-import emailService, { OverviewEmailData } from "@/services/emailService"; // Updated import
+import emailService, { OverviewEmailData } from "@/services/emailService";
 import { 
   FileText, 
-  Image as ImageIcon, // Renamed
-  Video as VideoIcon, // Renamed
-  FileIcon as FileIconLucide, // Renamed
+  Image as ImageIcon,
+  Video as VideoIcon,
+  FileIcon as FileIconLucide,
   CheckCircle, 
   Clock, 
   XCircle, 
   Send,
   Menu,
-  Settings
+  Settings,
+  ArrowLeft
 } from "lucide-react";
-import { ArrowLeft } from "lucide-react";
 
 export default function OverviewPage() {
   const { user, loading } = useAuth();
@@ -140,7 +140,7 @@ export default function OverviewPage() {
       const result = await emailService.sendOverviewData(allData);
       
       if (result.success) {
-        setMessage(`Vue d'ensemble complète envoyée avec succès à petronildaga@capec-ci.org`);
+        setMessage("Vue d'ensemble complète envoyée avec succès à petronildaga@capec-ci.org");
       } else {
         setMessage("Erreur lors de l'envoi des données");
       }
@@ -163,7 +163,6 @@ export default function OverviewPage() {
   const mainMenus = menus.filter(m => !m.parent_id);
   const submenus = menus.filter(m => m.parent_id);
   const pendingSubmissions = submissions.filter(s => s.status === "pending");
-  // const approvedSubmissions = submissions.filter(s => s.status === "approved"); // This variable was unused
   const pendingMenuRequests = menuRequests.filter(r => r.status === "pending");
 
   return (

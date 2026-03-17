@@ -56,44 +56,34 @@ export default function StatisticsPage() {
       setStats(calculatedStats);
     } catch (error) {
       console.error("Erreur lors du chargement des statistiques:", error);
-      // En cas d'erreur, utiliser des données par défaut basées sur les vraies données de la base
       const fallbackStats: StatisticsData = {
         overview: {
           totalMenus: 7,
           totalSubmenus: 14,
-          totalContentSubmissions: 13,
-          totalMenuRequests: 4,
+          totalContentSubmissions: 0,
+          totalMenuRequests: 0,
           pendingItems: 0,
-          approvedItems: 13,
-          rejectedItems: 4,
+          approvedItems: 0,
+          rejectedItems: 0,
         },
         contentByType: {
-          text: 5,
-          image: 4,
-          video: 2,
-          pdf: 2,
+          text: 0,
+          image: 0,
+          video: 0,
+          pdf: 0,
         },
         contentByStatus: {
           pending: 0,
-          approved: 11,
-          rejected: 2,
+          approved: 0,
+          rejected: 0,
         },
         menuRequestsByStatus: {
           pending: 0,
-          approved: 3,
-          rejected: 1,
+          approved: 0,
+          rejected: 0,
         },
-        recentActivity: [
-          {
-            date: new Date().toISOString(),
-            type: "content",
-            title: "Contenu récent soumis",
-            status: "approved",
-          }
-        ],
-        monthlyStats: [
-          { month: "décembre 2024", contentSubmissions: 13, menuRequests: 4 },
-        ],
+        recentActivity: [],
+        monthlyStats: [],
       };
       setStats(fallbackStats);
     } finally {
@@ -171,7 +161,6 @@ export default function StatisticsPage() {
           </div>
         </div>
 
-        {/* Vue d'ensemble */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="border-blue-200">
             <CardContent className="p-6">
@@ -222,7 +211,6 @@ export default function StatisticsPage() {
           </Card>
         </div>
 
-        {/* Détails par catégorie */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
@@ -297,7 +285,6 @@ export default function StatisticsPage() {
           </Card>
         </div>
 
-        {/* Activité récente */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -340,7 +327,6 @@ export default function StatisticsPage() {
           </CardContent>
         </Card>
 
-        {/* Évolution mensuelle */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
